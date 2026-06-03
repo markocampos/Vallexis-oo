@@ -3,151 +3,370 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claim Your Digital Product</title>
+    <title>Claim Your Digital Product - Vallexis</title>
     <style>
+        :root {
+            --color-primary: #2563eb;
+            --color-primary-dark: #1d4ed8;
+            --color-success: #16a34a;
+            --color-error: #dc2626;
+            --color-warning: #ca8a04;
+            --color-text: #1f2937;
+            --color-text-muted: #6b7280;
+            --color-bg: #f9fafb;
+            --color-card: #ffffff;
+            --color-border: #e5e7eb;
+            --color-focus: #93c5fd;
+            --radius: 8px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --transition: 150ms ease;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: var(--color-bg);
+            color: var(--color-text);
             margin: 0;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            line-height: 1.5;
         }
+
         .container {
-            background-color: #fff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            max-width: 400px;
+            max-width: 480px;
             width: 100%;
         }
-        h2 {
-            margin-top: 0;
-            color: #111;
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .brand-header h1 {
             font-size: 24px;
-            text-align: center;
+            margin: 0 0 8px 0;
+            color: var(--color-text);
         }
-        p.subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
+
+        .brand-header .subtitle {
             font-size: 14px;
+            color: var(--color-text-muted);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
+
+        /* SVG icon for trust signal */
+        .trust-icon {
+            width: 16px;
+            height: 16px;
+            fill: var(--color-success);
+        }
+
+        .claim-card {
+            background-color: var(--color-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
+        }
+
+        .claim-card h2 {
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--color-text);
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 12px;
+        }
+
         .form-group {
             margin-bottom: 20px;
         }
-        label {
+
+        .form-label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 600;
             font-size: 14px;
+            color: var(--color-text);
         }
-        input[type="text"], input[type="email"], select {
+
+        .required {
+            color: var(--color-error);
+        }
+
+        .form-input, .form-select {
             width: 100%;
             padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: border-color 0.2s;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            font-size: 16px; /* 16px prevents iOS zoom */
+            transition: border-color var(--transition), box-shadow var(--transition);
+            background-color: #fff;
+            color: var(--color-text);
         }
-        input[type="text"]:focus, input[type="email"]:focus, select:focus {
+
+        .form-input:focus, .form-select:focus {
             outline: none;
-            border-color: #007bff;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-focus);
         }
-        button {
+
+        .form-input.invalid {
+            border-color: var(--color-error);
+        }
+
+        .form-input.invalid:focus {
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+        }
+
+        .help-text {
+            display: block;
+            font-size: 13px;
+            color: var(--color-text-muted);
+            margin-top: 6px;
+        }
+
+        .error-text {
+            display: block;
+            font-size: 13px;
+            color: var(--color-error);
+            margin-top: 6px;
+            min-height: 19px;
+        }
+
+        .btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
             width: 100%;
-            padding: 14px;
-            background-color: #007bff;
+            padding: 14px 20px;
+            background-color: var(--color-primary);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: var(--radius);
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 10px;
+            transition: background-color var(--transition);
         }
-        button:hover {
-            background-color: #0056b3;
+
+        .btn:hover {
+            background-color: var(--color-primary-dark);
         }
-        button:disabled {
-            background-color: #ccc;
+
+        .btn:disabled {
+            background-color: var(--color-border);
+            color: var(--color-text-muted);
             cursor: not-allowed;
         }
-        .message {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 6px;
+
+        /* Spinner animation for loading state */
+        .btn-spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn.loading .btn-text {
+            display: none;
+        }
+
+        .btn.loading .btn-spinner {
+            display: block;
+        }
+
+        .status-panel {
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-panel.success {
+            display: block;
+            background-color: #f0fdf4;
+            color: var(--color-success);
+            border: 1px solid #bbf7d0;
+        }
+
+        .status-panel.error {
+            display: block;
+            background-color: #fef2f2;
+            color: var(--color-error);
+            border: 1px solid #fecaca;
+        }
+
+        .status-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .status-message {
+            margin: 0;
+        }
+
+        /* Success State specific styles */
+        #success-state {
             display: none;
             text-align: center;
-            font-size: 14px;
         }
-        .message.success {
-            background-color: #d4edda;
-            color: #155724;
+
+        #success-state.active {
             display: block;
         }
-        .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
+
+        .success-icon {
+            width: 48px;
+            height: 48px;
+            fill: var(--color-success);
+            margin: 0 auto 16px auto;
             display: block;
+        }
+
+        #claim-form.hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Claim Your Purchase</h2>
-    <p class="subtitle">Enter your details and payment reference to receive your secure download link.</p>
+<main class="container">
+    <header class="brand-header">
+        <h1>Claim Your Digital Product</h1>
+        <p class="subtitle">
+            <svg class="trust-icon" viewBox="0 0 20 20" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-1.998A11.954 11.954 0 0110 1.944zM6.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l5-5a1 1 0 00-1.414-1.414L9 10.586 6.707 9.293z" clip-rule="evenodd" />
+            </svg>
+            Secure, instant delivery after payment verification
+        </p>
+    </header>
 
-    <form id="claimForm">
-        <div class="form-group">
-            <label for="product">Select Product</label>
-            <select id="product" required>
-                <!-- Products will be loaded dynamically -->
-                <option value="" disabled selected>Loading products...</option>
-            </select>
+    <section class="claim-card" aria-labelledby="claim-heading">
+        <h2 id="claim-heading">Enter Your Details</h2>
+
+        <form id="claim-form" novalidate>
+            <fieldset style="border:none; padding:0; margin:0;">
+                <legend class="sr-only" style="display:none;">Buyer Information</legend>
+                <div class="form-group">
+                    <label for="product" class="form-label">
+                        Select Product <span aria-label="required" class="required">*</span>
+                    </label>
+                    <select id="product" name="product_id" required class="form-select" aria-describedby="product-error">
+                        <option value="" disabled selected>Loading products...</option>
+                    </select>
+                    <span id="product-error" class="error-text" role="alert" aria-live="polite"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="name" class="form-label">
+                        Full Name <span aria-label="required" class="required">*</span>
+                    </label>
+                    <input type="text" id="name" name="buyer_name" required class="form-input" aria-describedby="name-error" placeholder="Juan Dela Cruz" autocomplete="name">
+                    <span id="name-error" class="error-text" role="alert" aria-live="polite"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        Email Address <span aria-label="required" class="required">*</span>
+                    </label>
+                    <input type="email" id="email" name="buyer_email" required class="form-input" aria-describedby="email-error" placeholder="juan@example.com" autocomplete="email">
+                    <span id="email-error" class="error-text" role="alert" aria-live="polite"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="reference" class="form-label">
+                        GCash / Maya Reference Number <span aria-label="required" class="required">*</span>
+                    </label>
+                    <input
+                        id="reference"
+                        name="reference_number"
+                        type="text"
+                        inputmode="numeric"
+                        pattern="\d{13}"
+                        maxlength="13"
+                        required
+                        class="form-input"
+                        aria-describedby="reference-help reference-error"
+                        placeholder="e.g. 1000000000000"
+                    />
+                    <span id="reference-help" class="help-text">
+                        13-digit number from your payment receipt
+                    </span>
+                    <span id="reference-error" class="error-text" role="alert" aria-live="polite"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submit-btn">
+                    <span class="btn-text">Submit Claim</span>
+                    <span class="btn-spinner" aria-hidden="true"></span>
+                </button>
+            </fieldset>
+        </form>
+
+        <div id="success-state">
+            <svg class="success-icon" viewBox="0 0 20 20" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <h3 style="margin-top:0; color:var(--color-text);">Claim Submitted Successfully</h3>
+            <p style="color:var(--color-text-muted); font-size:14px; margin-bottom: 24px;">
+                We are now verifying your payment. Once matched, we will watermark your PDF and send it to your email.
+            </p>
+            <div style="background-color: var(--color-bg); padding: 16px; border-radius: var(--radius); text-align:left; font-size: 14px;">
+                <strong>What happens next?</strong>
+                <ol style="margin-top:8px; margin-bottom:0; padding-left: 20px; color: var(--color-text-muted);">
+                    <li>Payment verified automatically</li>
+                    <li>Secure PDF generated</li>
+                    <li>Download link emailed to you</li>
+                </ol>
+            </div>
+            <button class="btn btn-primary" style="margin-top: 24px;" onclick="window.location.reload()">Submit Another Claim</button>
         </div>
+    </section>
 
-        <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" placeholder="Juan Dela Cruz" required>
-        </div>
-
-        <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" placeholder="juan@example.com" required>
-        </div>
-
-        <div class="form-group">
-            <label for="reference">GCash/Maya Reference Number</label>
-            <input type="text" id="reference" placeholder="e.g. 1000000000000" required>
-        </div>
-
-        <button type="submit" id="submitBtn">Submit Claim</button>
-    </form>
-
-    <div id="statusMessage" class="message"></div>
-</div>
+    <!-- Live status region for screen readers -->
+    <div id="status-region" class="status-panel" aria-live="assertive" aria-atomic="true" role="alert" tabindex="-1">
+        <div class="status-title" id="status-title"></div>
+        <p class="status-message" id="status-message"></p>
+    </div>
+</main>
 
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
         const productSelect = document.getElementById('product');
+        const form = document.getElementById('claim-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const statusRegion = document.getElementById('status-region');
+        const statusTitle = document.getElementById('status-title');
+        const statusMessage = document.getElementById('status-message');
+        const successState = document.getElementById('success-state');
 
-        // In a real scenario, you'd fetch active products from the API.
-        // For now, we will fetch them if the API exposes them, or mock it if empty.
+        // Fetch products
         try {
-            // Note: We need a GET /api/products endpoint. If it doesn't exist, we'll mock one below for demonstration.
             const response = await fetch('/api/products');
             if (response.ok) {
                 const products = await response.json();
                 productSelect.innerHTML = '<option value="" disabled selected>Select the product you purchased</option>';
                 if(products.length === 0) {
-                     productSelect.innerHTML += `<option value="1">Default Planner Template</option>`; // fallback
+                     productSelect.innerHTML += `<option value="1">Default Planner Template</option>`;
                 } else {
                     products.forEach(p => {
                         productSelect.innerHTML += `<option value="${p.id}">${p.name} (PHP ${p.price})</option>`;
@@ -160,15 +379,58 @@
             productSelect.innerHTML = '<option value="1">Default Planner Template</option>';
         }
 
-        const form = document.getElementById('claimForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const statusMessage = document.getElementById('statusMessage');
+        // Inline validation handlers
+        const inputs = form.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                if (input.classList.contains('invalid')) {
+                    validateInput(input);
+                }
+            });
+            input.addEventListener('blur', () => {
+                validateInput(input);
+            });
+        });
+
+        function validateInput(input) {
+            const errorElement = document.getElementById(`${input.id}-error`);
+            if (!input.checkValidity()) {
+                input.classList.add('invalid');
+
+                if (input.validity.valueMissing) {
+                    errorElement.textContent = 'This field is required.';
+                } else if (input.validity.typeMismatch && input.type === 'email') {
+                    errorElement.textContent = 'Please enter a valid email address.';
+                } else if (input.validity.patternMismatch && input.id === 'reference') {
+                    errorElement.textContent = 'Reference number must be exactly 13 digits.';
+                } else {
+                    errorElement.textContent = 'Invalid input.';
+                }
+                return false;
+            } else {
+                input.classList.remove('invalid');
+                errorElement.textContent = '';
+                return true;
+            }
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            // Validate all inputs
+            let isValid = true;
+            inputs.forEach(input => {
+                if (!validateInput(input)) {
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) return;
+
+            // Show loading state
             submitBtn.disabled = true;
-            submitBtn.innerText = 'Submitting...';
-            statusMessage.className = 'message';
+            submitBtn.classList.add('loading');
+            statusRegion.className = 'status-panel'; // Hide status
 
             const payload = {
                 product_id: parseInt(document.getElementById('product').value),
@@ -187,22 +449,39 @@
                 });
 
                 if (response.ok) {
-                    statusMessage.innerText = 'Success! Your claim has been submitted. You will receive an email shortly once the payment is verified.';
-                    statusMessage.className = 'message success';
-                    form.reset();
+                    // Show success state
+                    form.classList.add('hidden');
+                    successState.classList.add('active');
+                    statusRegion.className = 'status-panel'; // Hide global status box since we show success state
                 } else {
                     const errorData = await response.json();
-                    statusMessage.innerText = `Error: ${errorData.detail || 'Failed to submit claim. Please check your details.'}`;
-                    statusMessage.className = 'message error';
+                    let errorMsg = 'Failed to submit claim. Please check your details and try again.';
+                    if (errorData.detail) {
+                        if (typeof errorData.detail === 'string') {
+                            errorMsg = errorData.detail;
+                        } else if (Array.isArray(errorData.detail)) {
+                            errorMsg = errorData.detail.map(e => e.msg || e).join(' ');
+                        } else if (typeof errorData.detail === 'object') {
+                            errorMsg = errorData.detail.message || JSON.stringify(errorData.detail);
+                        }
+                    }
+                    showError(errorMsg);
                 }
             } catch (error) {
-                statusMessage.innerText = 'A network error occurred. Please try again.';
-                statusMessage.className = 'message error';
+                showError('A network error occurred. Please check your connection and try again.');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerText = 'Submit Claim';
+                submitBtn.classList.remove('loading');
             }
         });
+
+        function showError(message) {
+            statusRegion.className = 'status-panel error';
+            statusTitle.textContent = 'Submission Error';
+            statusMessage.textContent = message;
+            // Focus status region for screen readers
+            statusRegion.focus();
+        }
     });
 </script>
 
