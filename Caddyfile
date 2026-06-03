@@ -1,0 +1,4 @@
+# Caddyfile for automated reverse proxy and TLS
+yourdomain.com {
+    reverse_proxy localhost:8000
+}
