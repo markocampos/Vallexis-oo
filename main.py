@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, UploadFile, File, Request
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 import database, models, schemas
 import drm_service, ocr_service
@@ -8,6 +10,9 @@ import os, tempfile
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Automated DRM and Delivery API")
+
+templates = Jinja2Templates(directory="templates")
+
 
 def get_db():
     db = database.SessionLocal()
@@ -67,6 +72,16 @@ def match_and_fulfill(reference_number: str):
     finally:
         db.close()
 
+
+
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend(request: Request):
+    return templates.TemplateResponse(request=request, name="index.html")
+
+@app.get("/api/products")
+def get_products(db: Session = Depends(get_db)):
+    return db.query(models.Product).all()
 
 @app.post("/api/products", response_model=schemas.ProductCreate)
 def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):

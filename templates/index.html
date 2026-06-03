@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claim Your Digital Product</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 {
+            margin-top: 0;
+            color: #111;
+            font-size: 24px;
+            text-align: center;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input[type="text"], input[type="email"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus, input[type="email"]:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+            text-align: center;
+            font-size: 14px;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Claim Your Purchase</h2>
+    <p class="subtitle">Enter your details and payment reference to receive your secure download link.</p>
+
+    <form id="claimForm">
+        <div class="form-group">
+            <label for="product">Select Product</label>
+            <select id="product" required>
+                <!-- Products will be loaded dynamically -->
+                <option value="" disabled selected>Loading products...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" placeholder="Juan Dela Cruz" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="juan@example.com" required>
+        </div>
+
+        <div class="form-group">
+            <label for="reference">GCash/Maya Reference Number</label>
+            <input type="text" id="reference" placeholder="e.g. 1000000000000" required>
+        </div>
+
+        <button type="submit" id="submitBtn">Submit Claim</button>
+    </form>
+
+    <div id="statusMessage" class="message"></div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const productSelect = document.getElementById('product');
+
+        // In a real scenario, you'd fetch active products from the API.
+        // For now, we will fetch them if the API exposes them, or mock it if empty.
+        try {
+            // Note: We need a GET /api/products endpoint. If it doesn't exist, we'll mock one below for demonstration.
+            const response = await fetch('/api/products');
+            if (response.ok) {
+                const products = await response.json();
+                productSelect.innerHTML = '<option value="" disabled selected>Select the product you purchased</option>';
+                if(products.length === 0) {
+                     productSelect.innerHTML += `<option value="1">Default Planner Template</option>`; // fallback
+                } else {
+                    products.forEach(p => {
+                        productSelect.innerHTML += `<option value="${p.id}">${p.name} (PHP ${p.price})</option>`;
+                    });
+                }
+            } else {
+                 productSelect.innerHTML = '<option value="1">Default Planner Template</option>';
+            }
+        } catch (error) {
+            productSelect.innerHTML = '<option value="1">Default Planner Template</option>';
+        }
+
+        const form = document.getElementById('claimForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Submitting...';
+            statusMessage.className = 'message';
+
+            const payload = {
+                product_id: parseInt(document.getElementById('product').value),
+                buyer_name: document.getElementById('name').value,
+                buyer_email: document.getElementById('email').value,
+                reference_number: document.getElementById('reference').value
+            };
+
+            try {
+                const response = await fetch('/api/claims', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    statusMessage.innerText = 'Success! Your claim has been submitted. You will receive an email shortly once the payment is verified.';
+                    statusMessage.className = 'message success';
+                    form.reset();
+                } else {
+                    const errorData = await response.json();
+                    statusMessage.innerText = `Error: ${errorData.detail || 'Failed to submit claim. Please check your details.'}`;
+                    statusMessage.className = 'message error';
+                }
+            } catch (error) {
+                statusMessage.innerText = 'A network error occurred. Please try again.';
+                statusMessage.className = 'message error';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Submit Claim';
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
