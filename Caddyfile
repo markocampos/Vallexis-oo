@@ -1,4 +1,7 @@
-# Caddyfile for automated reverse proxy and TLS
-yourdomain.com {
+vallexis.duckdns.org {
+    reverse_proxy localhost:3000
+}
+
+api-vallexis.duckdns.org {
     reverse_proxy localhost:8000
 }
