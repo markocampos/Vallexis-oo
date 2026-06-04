@@ -2,6 +2,7 @@ from pypdf import PdfReader, PdfWriter, Transformation
 from io import BytesIO
 import os
 
+
 def create_watermark(text: str) -> BytesIO:
     """
     Creates a transparent PDF with the given text as a diagonal watermark.
@@ -25,6 +26,7 @@ def create_watermark(text: str) -> BytesIO:
     c.save()
     packet.seek(0)
     return packet
+
 
 def apply_watermark(source_pdf_path: str, buyer_info: str, output_path: str) -> str:
     """

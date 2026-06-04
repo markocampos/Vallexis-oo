@@ -4,6 +4,7 @@ import database
 import models
 import email_service
 
+
 def process_queue():
     """
     Infinite loop that checks the delivery queue and sends emails via Resend.
@@ -16,7 +17,12 @@ def process_queue():
         db: Session = database.SessionLocal()
         try:
             # Get pending deliveries (limited to 100 to prevent unbounded memory usage and full table scans)
-            pending = db.query(models.DeliveryQueue).filter(models.DeliveryQueue.status == "pending").limit(100).all()
+            pending = (
+                db.query(models.DeliveryQueue)
+                .filter(models.DeliveryQueue.status == "pending")
+                .limit(100)
+                .all()
+            )
 
             if pending:
                 # Pre-fetch all associated claims in a single query (fixes N+1)
@@ -39,7 +45,7 @@ def process_queue():
                     email_service.send_delivery_email(
                         buyer_email=claim.buyer_email,
                         buyer_name=claim.buyer_name,
-                        pdf_path=item.pdf_path
+                        pdf_path=item.pdf_path,
                     )
                     item.status = "sent"
                     db.commit()
@@ -47,10 +53,12 @@ def process_queue():
                 except Exception as e:
                     error_str = str(e).lower()
                     if "429" in error_str or "rate limit" in error_str:
-                        print("Resend rate limit reached. Pausing queue processing for 1 hour...")
+                        print(
+                            "Resend rate limit reached. Pausing queue processing for 1 hour..."
+                        )
                         db.rollback()
                         time.sleep(3600)
-                        break # Break the inner loop, wait, and try again
+                        break  # Break the inner loop, wait, and try again
                     else:
                         print(f"Failed to send email: {e}")
                         item.status = "failed"
@@ -65,6 +73,7 @@ def process_queue():
         finally:
             # Always close the session after checking the queue to release any locks
             db.close()
+
 
 if __name__ == "__main__":
     process_queue()

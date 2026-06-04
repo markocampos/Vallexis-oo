@@ -1,6 +1,15 @@
-from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, UploadFile, File, Request
+from fastapi import (
+    FastAPI,
+    Depends,
+    HTTPException,
+    BackgroundTasks,
+    UploadFile,
+    File,
+    Request,
+)
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 import database
@@ -26,6 +35,7 @@ def get_db():
     finally:
         db.close()
 
+
 def match_and_fulfill(reference_number: str):
     """
     Background logic to check if a claim and a payment notification match
@@ -33,6 +43,7 @@ def match_and_fulfill(reference_number: str):
     Uses its own db session to avoid thread-safety issues.
     """
     from sqlalchemy.orm import joinedload
+
     db = database.SessionLocal()
     try:
         # Optimization: use joinedload to prevent N+1 queries when fetching the product
@@ -50,7 +61,7 @@ def match_and_fulfill(reference_number: str):
                 buyer_info = f"{claim.buyer_name} ({claim.buyer_email}) - Ref: {reference_number}"
 
                 # Security: Sanitize reference_number to prevent path traversal
-                safe_ref = re.sub(r'[^a-zA-Z0-9_-]', '', reference_number)
+                safe_ref = re.sub(r"[^a-zA-Z0-9_-]", "", reference_number)
                 output_filename = f"asset_{claim.id}_{safe_ref}.pdf"
                 output_path = os.path.join("assets", output_filename)
 
@@ -65,21 +76,22 @@ def match_and_fulfill(reference_number: str):
                 # If product doesn't have a real file for testing, create a dummy one
                 if not os.path.exists(safe_product_filepath):
                     from reportlab.pdfgen import canvas
+
                     c = canvas.Canvas(safe_product_filepath)
                     c.drawString(100, 100, f"Sample Content for {product.name}")
                     c.save()
 
                 try:
-                    drm_service.apply_watermark(safe_product_filepath, buyer_info, output_path)
+                    drm_service.apply_watermark(
+                        safe_product_filepath, buyer_info, output_path
+                    )
                 except Exception as e:
                     print(f"Failed to generate DRM: {e}")
                     return
 
                 # Add to Delivery Queue
                 queue_item = models.DeliveryQueue(
-                    claim_id=claim.id,
-                    pdf_path=output_path,
-                    status="pending"
+                    claim_id=claim.id, pdf_path=output_path, status="pending"
                 )
                 db.add(queue_item)
 
@@ -91,15 +103,15 @@ def match_and_fulfill(reference_number: str):
         db.close()
 
 
-
-
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+
 @app.get("/api/products")
 def get_products(db: Session = Depends(get_db)):
     return db.query(models.Product).all()
+
 
 @app.post("/api/products", response_model=schemas.ProductCreate)
 def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
@@ -109,10 +121,17 @@ def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)
     db.refresh(db_product)
     return product
 
+
 @app.post("/api/claims", response_model=schemas.ClaimCreate)
-def submit_claim(claim: schemas.ClaimCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def submit_claim(
+    claim: schemas.ClaimCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     # Check if product exists
-    product = db.query(models.Product).filter(models.Product.id == claim.product_id).first()
+    product = (
+        db.query(models.Product).filter(models.Product.id == claim.product_id).first()
+    )
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
@@ -125,14 +144,25 @@ def submit_claim(claim: schemas.ClaimCreate, background_tasks: BackgroundTasks, 
     background_tasks.add_task(match_and_fulfill, claim.reference_number)
     return claim
 
+
 @app.post("/api/webhooks/email", response_model=schemas.PaymentNotificationCreate)
-def receive_email_webhook(notification: schemas.PaymentNotificationCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def receive_email_webhook(
+    notification: schemas.PaymentNotificationCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     """
     Webhook endpoint for receiving parsed email payment notifications
     (e.g., from an inbound email parser service).
     """
     # Prevent duplicate parsing
-    existing = db.query(models.PaymentNotification).filter(models.PaymentNotification.reference_number == notification.reference_number).first()
+    existing = (
+        db.query(models.PaymentNotification)
+        .filter(
+            models.PaymentNotification.reference_number == notification.reference_number
+        )
+        .first()
+    )
     if existing:
         return existing
 
@@ -144,6 +174,7 @@ def receive_email_webhook(notification: schemas.PaymentNotificationCreate, backg
     # Try to match immediately in case claim arrived first
     background_tasks.add_task(match_and_fulfill, notification.reference_number)
     return notification
+
 
 @app.post("/api/ocr/fallback", response_model=schemas.OCRResponse)
 async def ocr_fallback(file: UploadFile = File(...)):

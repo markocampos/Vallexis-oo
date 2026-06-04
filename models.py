@@ -3,13 +3,15 @@ from sqlalchemy.orm import relationship
 from database import Base
 import datetime
 
+
 class Product(Base):
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     price = Column(Float)
-    filepath = Column(String) # Path to the original PDF
+    filepath = Column(String)  # Path to the original PDF
+
 
 class Claim(Base):
     __tablename__ = "claims"
@@ -24,6 +26,7 @@ class Claim(Base):
 
     product = relationship("Product")
 
+
 class PaymentNotification(Base):
     __tablename__ = "payment_notifications"
 
@@ -34,11 +37,12 @@ class PaymentNotification(Base):
     is_matched = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+
 class DeliveryQueue(Base):
     __tablename__ = "delivery_queue"
 
     id = Column(Integer, primary_key=True, index=True)
     claim_id = Column(Integer, ForeignKey("claims.id"))
-    pdf_path = Column(String) # Path to the generated watermarked PDF
-    status = Column(String, default="pending", index=True) # pending, sent, failed
+    pdf_path = Column(String)  # Path to the generated watermarked PDF
+    status = Column(String, default="pending", index=True)  # pending, sent, failed
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
