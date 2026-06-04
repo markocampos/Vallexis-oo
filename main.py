@@ -77,7 +77,7 @@ def match_and_fulfill(reference_number: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/api/products")
 def get_products(db: Session = Depends(get_db)):
