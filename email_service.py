@@ -1,5 +1,6 @@
 import resend
 import os
+import base64
 
 # You would normally set this as an environment variable
 resend.api_key = os.environ.get("RESEND_API_KEY", "re_dummy_key_for_testing")
@@ -22,7 +23,7 @@ def send_delivery_email(buyer_email: str, buyer_name: str, pdf_path: str):
         "attachments": [
             {
                 "filename": os.path.basename(pdf_path),
-                "content": list(pdf_content),
+                "content": base64.b64encode(pdf_content).decode("utf-8"),
             }
         ]
     }
