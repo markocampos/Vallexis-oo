@@ -38,4 +38,4 @@ def send_delivery_email(buyer_email: str, buyer_name: str, pdf_path: str):
             return {"id": "mock_id"}
     except Exception as e:
         print(f"Failed to send email: {e}")
-        raise e
+        raise
