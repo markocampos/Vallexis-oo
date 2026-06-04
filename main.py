@@ -18,6 +18,8 @@ app = FastAPI(title="Automated DRM and Delivery API")
 templates = Jinja2Templates(directory="templates")
 
 
+import re
+
 def get_db():
     db = database.SessionLocal()
     try:
@@ -44,21 +46,29 @@ def match_and_fulfill(reference_number: str):
             if product and payment.amount >= product.price:
                 # Payment valid! Generate DRM
                 buyer_info = f"{claim.buyer_name} ({claim.buyer_email}) - Ref: {reference_number}"
-                output_filename = f"asset_{claim.id}_{reference_number}.pdf"
+
+                # Security: Sanitize reference_number to prevent path traversal
+                safe_ref = re.sub(r'[^a-zA-Z0-9_-]', '', reference_number)
+                output_filename = f"asset_{claim.id}_{safe_ref}.pdf"
                 output_path = os.path.join("assets", output_filename)
 
                 # Ensure assets dir exists
                 os.makedirs("assets", exist_ok=True)
 
+                # Validate product.filepath to prevent path traversal before reading/writing
+                # It should be a simple filename inside the assets/ directory.
+                safe_product_filename = os.path.basename(product.filepath)
+                safe_product_filepath = os.path.join("assets", safe_product_filename)
+
                 # If product doesn't have a real file for testing, create a dummy one
-                if not os.path.exists(product.filepath):
+                if not os.path.exists(safe_product_filepath):
                     from reportlab.pdfgen import canvas
-                    c = canvas.Canvas(product.filepath)
+                    c = canvas.Canvas(safe_product_filepath)
                     c.drawString(100, 100, f"Sample Content for {product.name}")
                     c.save()
 
                 try:
-                    drm_service.apply_watermark(product.filepath, buyer_info, output_path)
+                    drm_service.apply_watermark(safe_product_filepath, buyer_info, output_path)
                 except Exception as e:
                     print(f"Failed to generate DRM: {e}")
                     return
