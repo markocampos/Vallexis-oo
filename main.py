@@ -38,9 +38,12 @@ def match_and_fulfill(reference_number: str):
     try:
         # Optimization: use joinedload to prevent N+1 queries when fetching the product
         claim = db.query(models.Claim).options(joinedload(models.Claim.product)).filter(models.Claim.reference_number == reference_number).first()
+        if not claim:
+            return False
+
         payment = db.query(models.PaymentNotification).filter(models.PaymentNotification.reference_number == reference_number).first()
 
-        if claim and payment and not claim.is_fulfilled:
+        if payment and not claim.is_fulfilled:
             # Check if amount matches product price
             product = claim.product
             if product and payment.amount >= product.price:
