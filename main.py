@@ -15,6 +15,8 @@ import re
 # Create the database tables
 models.Base.metadata.create_all(bind=database.engine)
 
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
+
 app = FastAPI(title="Automated DRM and Delivery API")
 
 templates = Jinja2Templates(directory="templates"
@@ -150,10 +152,15 @@ async def ocr_fallback(file: UploadFile = File(...)):
     """
     Fallback for iOS users: Upload screenshot to parse reference and amount.
     """
+    # Check file size
+    file_content = await file.read()
+    if len(file_content) > MAX_UPLOAD_SIZE:
+        raise HTTPException(status_code=413, detail="File too large")
+
     try:
         # Save temp file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
-            tmp.write(await file.read())
+            tmp.write(file_content)
             tmp_path = tmp.name
 
         try:

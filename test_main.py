@@ -60,6 +60,15 @@ def test_full_flow():
     # We should clean up
     os.remove("test.db")
 
+def test_ocr_fallback_file_size_limit():
+    # 5MB + 1 byte
+    large_content = b"a" * (5 * 1024 * 1024 + 1)
+    response = client.post(
+        "/api/ocr/fallback",
+        files={"file": ("large_image.png", large_content, "image/png")}
+    )
+    assert response.status_code == 413
+    assert response.json()["detail"] == "File too large"
 
 def test_html_injection_in_email(monkeypatch):
     import email_service
