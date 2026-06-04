@@ -2,7 +2,7 @@ import resend
 import os
 
 # You would normally set this as an environment variable
-resend.api_key = os.environ.get("RESEND_API_KEY", "re_dummy_key_for_testing")
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
 def send_delivery_email(buyer_email: str, buyer_name: str, pdf_path: str):
     """
@@ -30,7 +30,7 @@ def send_delivery_email(buyer_email: str, buyer_name: str, pdf_path: str):
     # In a real scenario, this would send the email.
     # We will wrap it in a try-except to handle Resend exceptions (like rate limits)
     try:
-        if "dummy_key" not in resend.api_key:
+        if resend.api_key:
             email = resend.Emails.send(params)
             return email
         else:
