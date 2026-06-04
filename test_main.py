@@ -72,3 +72,62 @@ def test_full_flow():
 
     # We should clean up
     os.remove("test.db")
+
+def test_ocr_fallback_file_size_limit():
+    # 5MB + 1 byte
+    large_content = b"a" * (5 * 1024 * 1024 + 1)
+    response = client.post(
+        "/api/ocr/fallback",
+        files={"file": ("large_image.png", large_content, "image/png")}
+    )
+    assert response.status_code == 413
+    assert response.json()["detail"] == "File too large"
+
+def test_html_injection_in_email(monkeypatch):
+    import email_service
+    import resend
+
+    # Create a dummy PDF to attach
+    dummy_pdf_path = "assets/dummy_test.pdf"
+    with open(dummy_pdf_path, "wb") as f:
+        f.write(b"dummy")
+
+    # Capture the params passed to resend.Emails.send
+    captured_params = {}
+
+    def mock_send(params):
+        captured_params.update(params)
+        return {"id": "mock_id"}
+
+    monkeypatch.setattr(resend.Emails, "send", mock_send)
+    # Ensure it's not using the dummy key logic to skip `resend.Emails.send`
+    monkeypatch.setattr(email_service, "resend", type("MockResend", (), {"api_key": "real_key", "Emails": resend.Emails}))
+
+    try:
+        malicious_name = "<script>alert('XSS')</script> John"
+        email_service.send_delivery_email("john@example.com", malicious_name, dummy_pdf_path)
+
+        assert "html" in captured_params
+        assert "&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt; John" in captured_params["html"]
+        assert "<script>" not in captured_params["html"]
+    finally:
+        os.remove(dummy_pdf_path)
+def test_match_and_fulfill_missing_claim():
+    # Setup test database and dependency overrides first
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    )
+    models.Base.metadata.create_all(bind=engine)
+
+    from main import match_and_fulfill
+
+    # Temporarily override database connection in main if needed,
+    # but match_and_fulfill creates its own SessionLocal directly
+    # To properly test this, we should make sure we test against a clear DB
+    try:
+        # Should return False for a non-existent claim reference
+        result = match_and_fulfill("nonexistent_reference_123")
+        assert result is False
+    finally:
+        if os.path.exists("test.db"):
+            os.remove("test.db")

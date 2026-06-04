@@ -24,12 +24,16 @@ def process_queue():
                 .all()
             )
 
+            if pending:
+                # Pre-fetch all associated claims in a single query (fixes N+1)
+                claim_ids = [item.claim_id for item in pending]
+                claims = db.query(models.Claim).filter(models.Claim.id.in_(claim_ids)).all()
+                claims_map = {claim.id: claim for claim in claims}
+            else:
+                claims_map = {}
+
             for item in pending:
-                claim = (
-                    db.query(models.Claim)
-                    .filter(models.Claim.id == item.claim_id)
-                    .first()
-                )
+                claim = claims_map.get(item.claim_id)
                 if not claim:
                     item.status = "failed"
                     db.commit()

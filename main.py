@@ -10,6 +10,7 @@ from fastapi import (
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 import database
 import models
@@ -23,12 +24,9 @@ import re
 # Create the database tables
 models.Base.metadata.create_all(bind=database.engine)
 
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
+
 app = FastAPI(title="Automated DRM and Delivery API")
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-templates = Jinja2Templates(directory="templates")
-
 
 def get_db():
     db = database.SessionLocal()
@@ -49,19 +47,13 @@ def match_and_fulfill(reference_number: str):
     db = database.SessionLocal()
     try:
         # Optimization: use joinedload to prevent N+1 queries when fetching the product
-        claim = (
-            db.query(models.Claim)
-            .options(joinedload(models.Claim.product))
-            .filter(models.Claim.reference_number == reference_number)
-            .first()
-        )
-        payment = (
-            db.query(models.PaymentNotification)
-            .filter(models.PaymentNotification.reference_number == reference_number)
-            .first()
-        )
+        claim = db.query(models.Claim).options(joinedload(models.Claim.product)).filter(models.Claim.reference_number == reference_number).first()
+        if not claim:
+            return False
 
-        if claim and payment and not claim.is_fulfilled:
+        payment = db.query(models.PaymentNotification).filter(models.PaymentNotification.reference_number == reference_number).first()
+
+        if payment and not claim.is_fulfilled:
             # Check if amount matches product price
             product = claim.product
             if product and payment.amount >= product.price:
@@ -189,16 +181,24 @@ async def ocr_fallback(file: UploadFile = File(...)):
     """
     Fallback for iOS users: Upload screenshot to parse reference and amount.
     """
+    # Check file size
+    file_content = await file.read()
+    if len(file_content) > MAX_UPLOAD_SIZE:
+        raise HTTPException(status_code=413, detail="File too large")
+
     try:
         # Save temp file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
-            tmp.write(await file.read())
+            tmp.write(file_content)
             tmp_path = tmp.name
 
-        result = ocr_service.extract_transaction_info(tmp_path)
-        os.unlink(tmp_path)
-        return schemas.OCRResponse(
-            reference_number=result.get("reference_number"), amount=result.get("amount")
-        )
+        try:
+            result = ocr_service.extract_transaction_info(tmp_path)
+            return schemas.OCRResponse(
+                reference_number=result.get("reference_number"),
+                amount=result.get("amount")
+            )
+        finally:
+            os.unlink(tmp_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
