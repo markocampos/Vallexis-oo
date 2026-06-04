@@ -18,6 +18,7 @@ app = FastAPI(title="Automated DRM and Delivery API")
 
 templates = Jinja2Templates(directory="templates")
 
+
 def get_db():
     db = database.SessionLocal()
     try:
