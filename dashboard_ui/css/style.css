@@ -96,6 +96,35 @@ section {
     font-size: 0.9em;
 }
 
+.media-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.media-item {
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.media-item h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1em;
+    color: var(--text-color);
+}
+
+.media-item img, .media-item video {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
 footer {
     text-align: center;
     margin-top: 2rem;
