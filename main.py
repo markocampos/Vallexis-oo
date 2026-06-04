@@ -9,7 +9,6 @@ from fastapi import (
 )
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 import database
@@ -103,6 +102,9 @@ def match_and_fulfill(reference_number: str):
         db.close()
 
 
+templates = Jinja2Templates(directory="templates")
+
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -193,12 +195,12 @@ async def ocr_fallback(file: UploadFile = File(...)):
             tmp_path = tmp.name
 
         try:
-            result = ocr_service.extract_transaction_info(tmp_path)
+            result = await run_in_threadpool(ocr_service.extract_transaction_info, tmp_path)
             return schemas.OCRResponse(
                 reference_number=result.get("reference_number"),
                 amount=result.get("amount")
             )
         finally:
             os.unlink(tmp_path)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
