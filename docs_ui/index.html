@@ -7,20 +7,64 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Vallexis Documentation</h1>
-            <p>User and Developer Guides</p>
-        </header>
-        <main>
+    <div class="layout">
+        <aside class="sidebar">
+            <nav>
+                <h2>Contents</h2>
+                <ul>
+                    <li><a href="#introduction">Introduction</a></li>
+                    <li><a href="#authentication">Authentication</a></li>
+                    <li><a href="#api-endpoints">API Endpoints</a></li>
+                    <li><a href="#webhooks">Webhooks</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header>
+                <h1>Vallexis Documentation</h1>
+                <p class="subtitle">User and Developer Guides</p>
+            </header>
+
             <section id="introduction">
                 <h2>Introduction</h2>
-                <p>Welcome to the Vallexis documentation site. This documentation covers API usage, frontend setup, and general guides.</p>
+                <p>Welcome to the Vallexis documentation site. This documentation covers API usage, frontend setup, and general guides for the Automated Digital Rights Management (DRM) and Asset Delivery API.</p>
             </section>
+
+            <section id="authentication">
+                <h2>Authentication</h2>
+                <p>All API requests must be authenticated. We use API keys for authentication. Include your API key in the <code>Authorization</code> header of your requests.</p>
+                <div class="code-block">
+                    <code>Authorization: Bearer YOUR_API_KEY</code>
+                </div>
+            </section>
+
+            <section id="api-endpoints">
+                <h2>API Endpoints</h2>
+                <p>The Vallexis API provides several endpoints for managing products, claims, and DRM operations.</p>
+
+                <h3>Claims</h3>
+                <ul>
+                    <li><strong>POST /api/claims</strong> - Submit a new claim for an asset.</li>
+                    <li><strong>GET /api/claims/{claim_id}</strong> - Retrieve the status of a specific claim.</li>
+                </ul>
+
+                <h3>Health</h3>
+                <ul>
+                    <li><strong>GET /health</strong> - Check the health status of the API.</li>
+                </ul>
+            </section>
+
+            <section id="webhooks">
+                <h2>Webhooks</h2>
+                <p>Webhooks allow your application to receive real-time notifications about events in your Vallexis account, such as successful asset deliveries or failed processing attempts.</p>
+                <p>To configure webhooks, navigate to the Webhooks section in your seller dashboard and provide a valid URL to receive POST requests.</p>
+            </section>
+
+            <footer>
+                <p>&copy; 2024 Vallexis</p>
+            </footer>
         </main>
-        <footer>
-            <p>&copy; 2024 Vallexis</p>
-        </footer>
     </div>
     <script src="js/script.js"></script>
 </body>
