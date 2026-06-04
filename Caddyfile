@@ -1,5 +1,5 @@
 vallexis.duckdns.org {
-    reverse_proxy localhost:8000
+    reverse_proxy localhost:3000
 }
 
 api-vallexis.duckdns.org {

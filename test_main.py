@@ -25,11 +25,6 @@ app.dependency_overrides[database.get_db] = override_get_db
 
 client = TestClient(app)
 
-def test_dashboard():
-    response = client.get("/dashboard")
-    assert response.status_code == 200
-    assert "Seller Dashboard" in response.text
-
 def test_full_flow():
     # 1. Create Product
     response = client.post("/api/products", json={
