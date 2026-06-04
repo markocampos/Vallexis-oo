@@ -1,44 +1,64 @@
 import pytest
-from unittest.mock import patch, mock_open
-import email_service
+import os
+import resend
+from email_service import send_delivery_email
 
-@patch("os.path.exists")
-@patch("builtins.open", new_callable=mock_open, read_data=b"pdf_content")
-@patch("email_service.resend.Emails.send")
-def test_send_delivery_email_success_real_key(mock_send, mock_file, mock_exists):
-    mock_exists.return_value = True
-    mock_send.return_value = {"id": "test_id"}
+@pytest.fixture
+def dummy_pdf(tmp_path):
+    pdf_path = tmp_path / "test.pdf"
+    pdf_path.write_text("dummy pdf content")
+    return str(pdf_path)
 
-    # We temporarily set api_key to not include 'dummy_key'
-    original_key = email_service.resend.api_key
-    email_service.resend.api_key = "real_key_for_testing"
+def test_missing_file_raises_error():
+    with pytest.raises(FileNotFoundError, match="PDF to attach not found at"):
+        send_delivery_email("test@example.com", "Test User", "non_existent.pdf")
+
+def test_dummy_key_mock_email(dummy_pdf):
+    # Ensure api_key contains 'dummy_key'
+    original_key = resend.api_key
+    resend.api_key = "re_dummy_key_123"
+    try:
+        result = send_delivery_email("test@example.com", "Test User", dummy_pdf)
+        assert result == {"id": "mock_id"}
+    finally:
+        resend.api_key = original_key
+
+def test_real_key_sends_email(mocker, dummy_pdf):
+    # Ensure api_key does NOT contain 'dummy_key'
+    original_key = resend.api_key
+    resend.api_key = "re_real_key_123"
+
+    mock_send = mocker.patch('resend.Emails.send')
+    mock_send.return_value = {"id": "real_mock_id"}
 
     try:
-        response = email_service.send_delivery_email("test@example.com", "Test User", "test.pdf")
-        assert response == {"id": "test_id"}
+        result = send_delivery_email("test@example.com", "Test User", dummy_pdf)
+
+        assert result == {"id": "real_mock_id"}
         mock_send.assert_called_once()
+        args, kwargs = mock_send.call_args
+
+        params = args[0]
+        assert params["to"] == ["test@example.com"]
+        assert params["from"] == "delivery@yourdomain.com"
+        assert params["subject"] == "Your Digital Product Delivery"
+        assert "Hi Test User," in params["html"]
+        assert len(params["attachments"]) == 1
+        assert params["attachments"][0]["filename"] == "test.pdf"
+        assert params["attachments"][0]["content"] == list(b"dummy pdf content")
     finally:
-        email_service.resend.api_key = original_key
+        resend.api_key = original_key
 
-@patch("os.path.exists")
-@patch("builtins.open", new_callable=mock_open, read_data=b"pdf_content")
-@patch("email_service.resend.Emails.send")
-@patch("builtins.print")
-def test_send_delivery_email_error(mock_print, mock_send, mock_file, mock_exists):
-    mock_exists.return_value = True
-    mock_send.side_effect = Exception("Test Exception")
+def test_resend_exception_propagates(mocker, dummy_pdf):
+    # Ensure api_key does NOT contain 'dummy_key'
+    original_key = resend.api_key
+    resend.api_key = "re_real_key_123"
 
-    original_key = email_service.resend.api_key
-    email_service.resend.api_key = "real_key_for_testing"
+    mock_send = mocker.patch('resend.Emails.send')
+    mock_send.side_effect = Exception("Resend API failed")
 
     try:
-        with pytest.raises(Exception, match="Test Exception"):
-            email_service.send_delivery_email("test@example.com", "Test User", "test.pdf")
-        mock_send.assert_called_once()
-        mock_print.assert_called_once_with("Error sending email: Test Exception")
+        with pytest.raises(Exception, match="Resend API failed"):
+            send_delivery_email("test@example.com", "Test User", dummy_pdf)
     finally:
-        email_service.resend.api_key = original_key
-
-def test_send_delivery_email_file_not_found():
-    with pytest.raises(FileNotFoundError):
-        email_service.send_delivery_email("test@example.com", "Test User", "missing.pdf")
+        resend.api_key = original_key
