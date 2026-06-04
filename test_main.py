@@ -29,9 +29,8 @@ app.dependency_overrides[database.get_db] = override_get_db
 client = TestClient(app)
 
 
-import random
-
 def test_full_flow():
+    import random
     # 1. Create Product
     response = client.post(
         "/api/products",
@@ -44,7 +43,6 @@ def test_full_flow():
     assert response.status_code == 200
 
     # Generate a random reference number so it's always unique between test runs
-    import random
     ref_num = f"{random.randint(1000000000000, 9999999999999)}"
 
     # 2. Submit Claim
