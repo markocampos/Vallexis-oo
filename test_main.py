@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from main import app
-import database, models
+import database
+import models
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
@@ -33,7 +34,6 @@ def test_full_flow():
         "filepath": "assets/test_planner.pdf"
     })
     assert response.status_code == 200
-    product = response.json()
 
     # 2. Submit Claim
     response = client.post("/api/claims", json={

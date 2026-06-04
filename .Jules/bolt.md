@@ -1,0 +1,5 @@
+## 2024-05-24 - Database Optimization
+
+**Learning:** Missing database indexes on heavily queried columns like `claims.is_fulfilled`, `payment_notifications.is_matched`, and `delivery_queue.status` caused slow query times, especially due to frequent polling by the background worker. Additionally, the worker processed queries for pending deliveries without an upper limit, risking high memory usage. Furthermore, the `match_and_fulfill` method suffered from N+1 query issue since it evaluated a secondary query just to fetch the product related to a given claim.
+
+**Action:** Added `index=True` to the missing boolean columns. Applied a `.limit(100)` to the worker pending delivery query, to restrict memory load and bound execution times per iteration. Used `.joinedload` within `main.py` so that eager fetching prevents querying for the related product later in the process.

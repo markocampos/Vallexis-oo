@@ -19,7 +19,7 @@ class Claim(Base):
     buyer_name = Column(String)
     buyer_email = Column(String)
     reference_number = Column(String, index=True)
-    is_fulfilled = Column(Boolean, default=False)
+    is_fulfilled = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     product = relationship("Product")
@@ -31,7 +31,7 @@ class PaymentNotification(Base):
     reference_number = Column(String, index=True, unique=True)
     amount = Column(Float)
     sender_name = Column(String, nullable=True)
-    is_matched = Column(Boolean, default=False)
+    is_matched = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class DeliveryQueue(Base):
@@ -40,5 +40,5 @@ class DeliveryQueue(Base):
     id = Column(Integer, primary_key=True, index=True)
     claim_id = Column(Integer, ForeignKey("claims.id"))
     pdf_path = Column(String) # Path to the generated watermarked PDF
-    status = Column(String, default="pending") # pending, sent, failed
+    status = Column(String, default="pending", index=True) # pending, sent, failed
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
