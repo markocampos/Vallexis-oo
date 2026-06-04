@@ -45,7 +45,7 @@ def test_real_key_sends_email(mocker, dummy_pdf):
         assert "Hi Test User," in params["html"]
         assert len(params["attachments"]) == 1
         assert params["attachments"][0]["filename"] == "test.pdf"
-        assert params["attachments"][0]["content"] == list(b"dummy pdf content")
+        assert params["attachments"][0]["content"] == "ZHVtbXkgcGRmIGNvbnRlbnQ="
     finally:
         resend.api_key = original_key
 

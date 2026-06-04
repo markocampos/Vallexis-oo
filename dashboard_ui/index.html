@@ -4,18 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seller Dashboard - Vallexis</title>
-    <style>
-        body { font-family: sans-serif; padding: 2rem; background: #f9f9f9; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        p { color: #666; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Seller Dashboard</h1>
-        <p>Welcome to the Vallexis Seller Dashboard. Your application API and frontend are successfully running.</p>
-        <p>You can manage your products and monitor payments from this page in the future.</p>
+        <header>
+            <h1>Seller Dashboard</h1>
+            <p>Welcome to the Vallexis Seller Dashboard. Your application API and frontend are successfully running.</p>
+        </header>
+        <nav>
+            <ul>
+                <li><a href="#overview">Overview & Media</a></li>
+                <li><a href="#products">Products</a></li>
+                <li><a href="#transactions">Recent Transactions</a></li>
+            </ul>
+        </nav>
+        <main>
+            <section id="overview">
+                <h2>Dashboard Overview</h2>
+                <p>Check out the latest overview and promotional media for your products.</p>
+                <div class="media-gallery">
+                    <div class="media-item">
+                        <h3>Promo Video</h3>
+                        <video controls width="100%">
+                            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <div class="media-item">
+                        <h3>Product Screenshot</h3>
+                        <img src="https://picsum.photos/800/400" alt="Product Screenshot" width="100%">
+                    </div>
+                </div>
+            </section>
+
+            <section id="products">
+                <h2>Products</h2>
+                <p>Manage your products here.</p>
+                <ul class="item-list">
+                    <li>
+                        <strong>E-book: Introduction to Python</strong>
+                        <p>Price: $15.00 | Status: Active</p>
+                    </li>
+                    <li>
+                        <strong>Video Course: Advanced Web Development</strong>
+                        <p>Price: $49.99 | Status: Active</p>
+                    </li>
+                </ul>
+            </section>
+            <section id="transactions">
+                <h2>Recent Transactions</h2>
+                <p>Monitor your recent payments and sales.</p>
+                <ul class="item-list">
+                    <li>
+                        <strong>Trx: TXN-00123</strong>
+                        <p>Product: E-book: Introduction to Python | Date: 2024-05-20 | Amount: $15.00</p>
+                    </li>
+                     <li>
+                        <strong>Trx: TXN-00122</strong>
+                        <p>Product: Video Course: Advanced Web Development | Date: 2024-05-18 | Amount: $49.99</p>
+                    </li>
+                </ul>
+            </section>
+        </main>
+        <footer>
+             <p>&copy; 2024 Vallexis</p>
+        </footer>
     </div>
+    <script src="js/script.js"></script>
 </body>
 </html>
