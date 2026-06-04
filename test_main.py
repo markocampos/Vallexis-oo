@@ -90,3 +90,22 @@ def test_html_injection_in_email(monkeypatch):
         assert "<script>" not in captured_params["html"]
     finally:
         os.remove(dummy_pdf_path)
+def test_match_and_fulfill_missing_claim():
+    # Setup test database and dependency overrides first
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    )
+    models.Base.metadata.create_all(bind=engine)
+
+    from main import match_and_fulfill
+
+    # Temporarily override database connection in main if needed,
+    # but match_and_fulfill creates its own SessionLocal directly
+    # To properly test this, we should make sure we test against a clear DB
+    try:
+        # Should return False for a non-existent claim reference
+        result = match_and_fulfill("nonexistent_reference_123")
+        assert result is False
+    finally:
+        if os.path.exists("test.db"):
+            os.remove("test.db")
