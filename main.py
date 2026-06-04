@@ -9,6 +9,7 @@ import drm_service
 import ocr_service
 import os
 import tempfile
+import re
 
 # Create the database tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -16,9 +17,6 @@ models.Base.metadata.create_all(bind=database.engine)
 app = FastAPI(title="Automated DRM and Delivery API")
 
 templates = Jinja2Templates(directory="templates")
-
-
-import re
 
 def get_db():
     db = database.SessionLocal()
