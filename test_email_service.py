@@ -1,5 +1,4 @@
 import pytest
-import os
 import resend
 from email_service import send_delivery_email
 
@@ -14,9 +13,9 @@ def test_missing_file_raises_error():
         send_delivery_email("test@example.com", "Test User", "non_existent.pdf")
 
 def test_dummy_key_mock_email(dummy_pdf):
-    # Ensure api_key contains 'dummy_key'
+    # Ensure api_key is None to trigger mock mode
     original_key = resend.api_key
-    resend.api_key = "re_dummy_key_123"
+    resend.api_key = None
     try:
         result = send_delivery_email("test@example.com", "Test User", dummy_pdf)
         assert result == {"id": "mock_id"}
@@ -45,7 +44,7 @@ def test_real_key_sends_email(mocker, dummy_pdf):
         assert "Hi Test User," in params["html"]
         assert len(params["attachments"]) == 1
         assert params["attachments"][0]["filename"] == "test.pdf"
-        assert params["attachments"][0]["content"] == list(b"dummy pdf content")
+        assert params["attachments"][0]["content"] == "ZHVtbXkgcGRmIGNvbnRlbnQ="
     finally:
         resend.api_key = original_key
 

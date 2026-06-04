@@ -9,4 +9,4 @@ python -m http.server 3000 --directory dashboard_ui &
 python -m http.server 4000 --directory docs_ui &
 
 # Start the uvicorn app
-uvicorn main:app --host 0.0.0.0 --port 8000
+uvicorn main:app --host 127.0.0.1 --port 8000
