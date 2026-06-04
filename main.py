@@ -19,8 +19,6 @@ MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
 
 app = FastAPI(title="Automated DRM and Delivery API")
 
-templates = Jinja2Templates(directory="templates"
-
 def get_db():
     db = database.SessionLocal()
     try:

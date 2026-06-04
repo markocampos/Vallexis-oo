@@ -1,5 +1,6 @@
 import html
 import os
+import base64
 
 import resend
 
@@ -24,7 +25,7 @@ def send_delivery_email(buyer_email: str, buyer_name: str, pdf_path: str):
         "attachments": [
             {
                 "filename": os.path.basename(pdf_path),
-                "content": list(pdf_content),
+                "content": base64.b64encode(pdf_content).decode("utf-8"),
             }
         ]
     }
