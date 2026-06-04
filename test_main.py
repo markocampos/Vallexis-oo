@@ -59,3 +59,34 @@ def test_full_flow():
 
     # We should clean up
     os.remove("test.db")
+
+
+def test_html_injection_in_email(monkeypatch):
+    import email_service
+    import resend
+
+    # Create a dummy PDF to attach
+    dummy_pdf_path = "assets/dummy_test.pdf"
+    with open(dummy_pdf_path, "wb") as f:
+        f.write(b"dummy")
+
+    # Capture the params passed to resend.Emails.send
+    captured_params = {}
+
+    def mock_send(params):
+        captured_params.update(params)
+        return {"id": "mock_id"}
+
+    monkeypatch.setattr(resend.Emails, "send", mock_send)
+    # Ensure it's not using the dummy key logic to skip `resend.Emails.send`
+    monkeypatch.setattr(email_service, "resend", type("MockResend", (), {"api_key": "real_key", "Emails": resend.Emails}))
+
+    try:
+        malicious_name = "<script>alert('XSS')</script> John"
+        email_service.send_delivery_email("john@example.com", malicious_name, dummy_pdf_path)
+
+        assert "html" in captured_params
+        assert "&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt; John" in captured_params["html"]
+        assert "<script>" not in captured_params["html"]
+    finally:
+        os.remove(dummy_pdf_path)

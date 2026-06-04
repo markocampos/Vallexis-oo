@@ -1,5 +1,7 @@
-import resend
+import html
 import os
+
+import resend
 
 # You would normally set this as an environment variable
 resend.api_key = os.environ.get("RESEND_API_KEY", "re_dummy_key_for_testing")
@@ -18,7 +20,7 @@ def send_delivery_email(buyer_email: str, buyer_name: str, pdf_path: str):
         "from": "delivery@yourdomain.com",
         "to": [buyer_email],
         "subject": "Your Digital Product Delivery",
-        "html": f"<p>Hi {buyer_name},</p><p>Thank you for your purchase! Attached is your digital product.</p>",
+        "html": f"<p>Hi {html.escape(buyer_name)},</p><p>Thank you for your purchase! Attached is your digital product.</p>",
         "attachments": [
             {
                 "filename": os.path.basename(pdf_path),
