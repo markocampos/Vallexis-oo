@@ -37,5 +37,5 @@ def send_delivery_email(buyer_email: str, buyer_name: str, pdf_path: str):
             print(f"[MOCK EMAIL] Sent to {buyer_email} with attachment {pdf_path}")
             return {"id": "mock_id"}
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Error sending email: {e}")
         raise e
