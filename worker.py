@@ -5,6 +5,61 @@ import models
 import email_service
 
 
+def process_batch(db: Session):
+    """
+    Processes a single batch of pending deliveries from the queue.
+    Returns True if a rate limit was hit, False otherwise.
+    """
+    # Get pending deliveries (limited to 100 to prevent unbounded memory usage and full table scans)
+    pending = (
+        db.query(models.DeliveryQueue)
+        .filter(models.DeliveryQueue.status == "pending")
+        .limit(100)
+        .all()
+    )
+
+    if pending:
+        # Pre-fetch all associated claims in a single query (fixes N+1)
+        claim_ids = [item.claim_id for item in pending]
+        claims = db.query(models.Claim).filter(models.Claim.id.in_(claim_ids)).all()
+        claims_map = {claim.id: claim for claim in claims}
+    else:
+        claims_map = {}
+
+    for item in pending:
+        claim = claims_map.get(item.claim_id)
+        if not claim:
+            item.status = "failed"
+            db.commit()
+            continue
+
+        print(f"Attempting to send PDF to {claim.buyer_email}...")
+
+        try:
+            email_service.send_delivery_email(
+                buyer_email=claim.buyer_email,
+                buyer_name=claim.buyer_name,
+                pdf_path=item.pdf_path,
+            )
+            item.status = "sent"
+            db.commit()
+            print(f"Successfully sent PDF to {claim.buyer_email}.")
+        except Exception as e:
+            error_str = str(e).lower()
+            if "429" in error_str or "rate limit" in error_str:
+                print(
+                    "Resend rate limit reached. Pausing queue processing for 1 hour..."
+                )
+                db.rollback()
+                return True
+            else:
+                print(f"Failed to send email: {e}")
+                item.status = "failed"
+                db.commit()
+
+    return False
+
+
 def process_queue():
     """
     Infinite loop that checks the delivery queue and sends emails via Resend.
@@ -16,57 +71,12 @@ def process_queue():
         # Create a fresh session for each iteration to avoid holding locks
         db: Session = database.SessionLocal()
         try:
-            # Get pending deliveries (limited to 100 to prevent unbounded memory usage and full table scans)
-            pending = (
-                db.query(models.DeliveryQueue)
-                .filter(models.DeliveryQueue.status == "pending")
-                .limit(100)
-                .all()
-            )
-
-            if pending:
-                # Pre-fetch all associated claims in a single query (fixes N+1)
-                claim_ids = [item.claim_id for item in pending]
-                claims = db.query(models.Claim).filter(models.Claim.id.in_(claim_ids)).all()
-                claims_map = {claim.id: claim for claim in claims}
+            rate_limit_hit = process_batch(db)
+            if rate_limit_hit:
+                time.sleep(3600)
             else:
-                claims_map = {}
-
-            for item in pending:
-                claim = claims_map.get(item.claim_id)
-                if not claim:
-                    item.status = "failed"
-                    db.commit()
-                    continue
-
-                print(f"Attempting to send PDF to {claim.buyer_email}...")
-
-                try:
-                    email_service.send_delivery_email(
-                        buyer_email=claim.buyer_email,
-                        buyer_name=claim.buyer_name,
-                        pdf_path=item.pdf_path,
-                    )
-                    item.status = "sent"
-                    db.commit()
-                    print(f"Successfully sent PDF to {claim.buyer_email}.")
-                except Exception as e:
-                    error_str = str(e).lower()
-                    if "429" in error_str or "rate limit" in error_str:
-                        print(
-                            "Resend rate limit reached. Pausing queue processing for 1 hour..."
-                        )
-                        db.rollback()
-                        time.sleep(3600)
-                        break  # Break the inner loop, wait, and try again
-                    else:
-                        print(f"Failed to send email: {e}")
-                        item.status = "failed"
-                        db.commit()
-
-            # Sleep for a bit before checking again
-            time.sleep(5)
-
+                # Sleep for a bit before checking again
+                time.sleep(5)
         except Exception as e:
             print(f"Worker error: {e}")
             time.sleep(5)
