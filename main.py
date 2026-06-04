@@ -9,6 +9,7 @@ import drm_service
 import ocr_service
 import os
 import tempfile
+import re
 
 # Create the database tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -16,9 +17,6 @@ models.Base.metadata.create_all(bind=database.engine)
 app = FastAPI(title="Automated DRM and Delivery API")
 
 templates = Jinja2Templates(directory="templates")
-
-
-import re
 
 def get_db():
     db = database.SessionLocal()
@@ -154,11 +152,13 @@ async def ocr_fallback(file: UploadFile = File(...)):
             tmp.write(await file.read())
             tmp_path = tmp.name
 
-        result = ocr_service.extract_transaction_info(tmp_path)
-        os.unlink(tmp_path)
-        return schemas.OCRResponse(
-            reference_number=result.get("reference_number"),
-            amount=result.get("amount")
-        )
+        try:
+            result = ocr_service.extract_transaction_info(tmp_path)
+            return schemas.OCRResponse(
+                reference_number=result.get("reference_number"),
+                amount=result.get("amount")
+            )
+        finally:
+            os.unlink(tmp_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
