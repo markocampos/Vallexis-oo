@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, UploadFile, File, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 import database
 import models
@@ -9,6 +10,7 @@ import drm_service
 import ocr_service
 import os
 import tempfile
+import re
 
 # Create the database tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -16,9 +18,6 @@ models.Base.metadata.create_all(bind=database.engine)
 app = FastAPI(title="Automated DRM and Delivery API")
 
 templates = Jinja2Templates(directory="templates")
-
-
-import re
 
 def get_db():
     db = database.SessionLocal()
@@ -154,7 +153,7 @@ async def ocr_fallback(file: UploadFile = File(...)):
             tmp.write(await file.read())
             tmp_path = tmp.name
 
-        result = ocr_service.extract_transaction_info(tmp_path)
+        result = await run_in_threadpool(ocr_service.extract_transaction_info, tmp_path)
         os.unlink(tmp_path)
         return schemas.OCRResponse(
             reference_number=result.get("reference_number"),
