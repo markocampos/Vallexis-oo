@@ -29,6 +29,8 @@ app.dependency_overrides[database.get_db] = override_get_db
 client = TestClient(app)
 
 
+import random
+
 def test_full_flow():
     # 1. Create Product
     response = client.post(
@@ -41,6 +43,10 @@ def test_full_flow():
     )
     assert response.status_code == 200
 
+    # Generate a random reference number so it's always unique between test runs
+    import random
+    ref_num = f"{random.randint(1000000000000, 9999999999999)}"
+
     # 2. Submit Claim
     response = client.post(
         "/api/claims",
@@ -48,7 +54,7 @@ def test_full_flow():
             "product_id": 1,
             "buyer_name": "John Doe",
             "buyer_email": "john@example.com",
-            "reference_number": "1234567890123",
+            "reference_number": ref_num,
         },
     )
     assert response.status_code == 200
@@ -57,7 +63,7 @@ def test_full_flow():
     response = client.post(
         "/api/webhooks/email",
         json={
-            "reference_number": "1234567890123",
+            "reference_number": ref_num,
             "amount": 500.0,
             "sender_name": "Johnny D.",
         },
@@ -71,7 +77,8 @@ def test_full_flow():
     time.sleep(1)  # wait a moment just in case
 
     # We should clean up
-    os.remove("test.db")
+    if os.path.exists("test.db"):
+        os.remove("test.db")
 
 def test_ocr_fallback_file_size_limit():
     # 5MB + 1 byte

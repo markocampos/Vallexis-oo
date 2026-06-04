@@ -137,6 +137,13 @@ def submit_claim(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    # Check if a claim with this reference number already exists
+    existing_claim = (
+        db.query(models.Claim).filter(models.Claim.reference_number == claim.reference_number).first()
+    )
+    if existing_claim:
+        raise HTTPException(status_code=400, detail="Claim with this reference number already exists")
+
     db_claim = models.Claim(**claim.model_dump())
     db.add(db_claim)
     db.commit()
