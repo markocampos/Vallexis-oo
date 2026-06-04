@@ -79,6 +79,10 @@ def match_and_fulfill(reference_number: str):
 async def serve_frontend(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/dashboard", response_class=HTMLResponse)
+async def serve_dashboard(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
 @app.get("/api/products")
 def get_products(db: Session = Depends(get_db)):
     return db.query(models.Product).all()
