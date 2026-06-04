@@ -2,9 +2,13 @@ from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, UploadFile
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
-import database, models, schemas
-import drm_service, ocr_service
-import os, tempfile
+import database
+import models
+import schemas
+import drm_service
+import ocr_service
+import os
+import tempfile
 
 # Create the database tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -27,14 +31,16 @@ def match_and_fulfill(reference_number: str):
     for the given reference number.
     Uses its own db session to avoid thread-safety issues.
     """
+    from sqlalchemy.orm import joinedload
     db = database.SessionLocal()
     try:
-        claim = db.query(models.Claim).filter(models.Claim.reference_number == reference_number).first()
+        # Optimization: use joinedload to prevent N+1 queries when fetching the product
+        claim = db.query(models.Claim).options(joinedload(models.Claim.product)).filter(models.Claim.reference_number == reference_number).first()
         payment = db.query(models.PaymentNotification).filter(models.PaymentNotification.reference_number == reference_number).first()
 
         if claim and payment and not claim.is_fulfilled:
             # Check if amount matches product price
-            product = db.query(models.Product).filter(models.Product.id == claim.product_id).first()
+            product = claim.product
             if product and payment.amount >= product.price:
                 # Payment valid! Generate DRM
                 buyer_info = f"{claim.buyer_name} ({claim.buyer_email}) - Ref: {reference_number}"

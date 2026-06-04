@@ -1,5 +1,4 @@
-from pypdf import PdfReader, PdfWriter, Transformation, PageObject
-import math
+from pypdf import PdfReader, PdfWriter, Transformation
 from io import BytesIO
 import os
 
@@ -40,7 +39,6 @@ def apply_watermark(source_pdf_path: str, buyer_info: str, output_path: str) -> 
     watermark_page = watermark_reader.pages[0]
 
     # Apply transformation to the watermark: scale and rotate 45 degrees
-    angle_rad = math.radians(45)
     # create a transformation matrix
     # [cos(a) sin(a) -sin(a) cos(a) tx ty]
     op = Transformation().scale(sx=1.5, sy=1.5).rotate(45).translate(tx=100, ty=-100)

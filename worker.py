@@ -1,6 +1,8 @@
 import time
 from sqlalchemy.orm import Session
-import database, models, email_service
+import database
+import models
+import email_service
 
 def process_queue():
     """
@@ -13,8 +15,8 @@ def process_queue():
         # Create a fresh session for each iteration to avoid holding locks
         db: Session = database.SessionLocal()
         try:
-            # Get pending deliveries
-            pending = db.query(models.DeliveryQueue).filter(models.DeliveryQueue.status == "pending").all()
+            # Get pending deliveries (limited to 100 to prevent unbounded memory usage and full table scans)
+            pending = db.query(models.DeliveryQueue).filter(models.DeliveryQueue.status == "pending").limit(100).all()
 
             for item in pending:
                 claim = db.query(models.Claim).filter(models.Claim.id == item.claim_id).first()
