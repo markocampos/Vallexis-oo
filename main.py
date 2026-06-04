@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, UploadFile, File, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 import database
 import models
@@ -16,8 +17,7 @@ models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Automated DRM and Delivery API")
 
-templates = Jinja2Templates(directory="templates")
-
+templates = Jinja2Templates(directory="templates"
 
 def get_db():
     db = database.SessionLocal()
