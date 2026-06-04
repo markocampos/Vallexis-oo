@@ -4,6 +4,7 @@ import os
 # You would normally set this as an environment variable
 resend.api_key = os.environ.get("RESEND_API_KEY", "re_dummy_key_for_testing")
 
+
 def send_delivery_email(buyer_email: str, buyer_name: str, pdf_path: str):
     """
     Sends the watermarked PDF using Resend.
@@ -24,7 +25,7 @@ def send_delivery_email(buyer_email: str, buyer_name: str, pdf_path: str):
                 "filename": os.path.basename(pdf_path),
                 "content": list(pdf_content),
             }
-        ]
+        ],
     }
 
     # In a real scenario, this would send the email.

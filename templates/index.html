@@ -4,249 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claim Your Digital Product - Vallexis</title>
-    <style>
-        :root {
-            --color-primary: #2563eb;
-            --color-primary-dark: #1d4ed8;
-            --color-success: #16a34a;
-            --color-error: #dc2626;
-            --color-warning: #ca8a04;
-            --color-text: #1f2937;
-            --color-text-muted: #6b7280;
-            --color-bg: #f9fafb;
-            --color-card: #ffffff;
-            --color-border: #e5e7eb;
-            --color-focus: #93c5fd;
-            --radius: 8px;
-            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-            --transition: 150ms ease;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--color-bg);
-            color: var(--color-text);
-            margin: 0;
-            padding: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            line-height: 1.5;
-        }
-
-        .container {
-            max-width: 480px;
-            width: 100%;
-        }
-
-        .brand-header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .brand-header h1 {
-            font-size: 24px;
-            margin: 0 0 8px 0;
-            color: var(--color-text);
-        }
-
-        .brand-header .subtitle {
-            font-size: 14px;
-            color: var(--color-text-muted);
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        /* SVG icon for trust signal */
-        .trust-icon {
-            width: 16px;
-            height: 16px;
-            fill: var(--color-success);
-        }
-
-        .claim-card {
-            background-color: var(--color-card);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            padding: 24px;
-        }
-
-        .claim-card h2 {
-            font-size: 20px;
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: var(--color-text);
-            border-bottom: 1px solid var(--color-border);
-            padding-bottom: 12px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--color-text);
-        }
-
-        .required {
-            color: var(--color-error);
-        }
-
-        .form-input, .form-select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius);
-            font-size: 16px; /* 16px prevents iOS zoom */
-            transition: border-color var(--transition), box-shadow var(--transition);
-            background-color: #fff;
-            color: var(--color-text);
-        }
-
-        .form-input:focus, .form-select:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px var(--color-focus);
-        }
-
-        .form-input.invalid {
-            border-color: var(--color-error);
-        }
-
-        .form-input.invalid:focus {
-            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
-        }
-
-        .help-text {
-            display: block;
-            font-size: 13px;
-            color: var(--color-text-muted);
-            margin-top: 6px;
-        }
-
-        .error-text {
-            display: block;
-            font-size: 13px;
-            color: var(--color-error);
-            margin-top: 6px;
-            min-height: 19px;
-        }
-
-        .btn {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            padding: 14px 20px;
-            background-color: var(--color-primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius);
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color var(--transition);
-        }
-
-        .btn:hover {
-            background-color: var(--color-primary-dark);
-        }
-
-        .btn:disabled {
-            background-color: var(--color-border);
-            color: var(--color-text-muted);
-            cursor: not-allowed;
-        }
-
-        /* Spinner animation for loading state */
-        .btn-spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-            display: none;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .btn.loading .btn-text {
-            display: none;
-        }
-
-        .btn.loading .btn-spinner {
-            display: block;
-        }
-
-        .status-panel {
-            margin-top: 24px;
-            padding: 16px;
-            border-radius: var(--radius);
-            font-size: 14px;
-            display: none;
-        }
-
-        .status-panel.success {
-            display: block;
-            background-color: #f0fdf4;
-            color: var(--color-success);
-            border: 1px solid #bbf7d0;
-        }
-
-        .status-panel.error {
-            display: block;
-            background-color: #fef2f2;
-            color: var(--color-error);
-            border: 1px solid #fecaca;
-        }
-
-        .status-title {
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .status-message {
-            margin: 0;
-        }
-
-        /* Success State specific styles */
-        #success-state {
-            display: none;
-            text-align: center;
-        }
-
-        #success-state.active {
-            display: block;
-        }
-
-        .success-icon {
-            width: 48px;
-            height: 48px;
-            fill: var(--color-success);
-            margin: 0 auto 16px auto;
-            display: block;
-        }
-
-        #claim-form.hidden {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
@@ -291,6 +49,35 @@
                     </label>
                     <input type="email" id="email" name="buyer_email" required class="form-input" aria-describedby="email-error" placeholder="juan@example.com" autocomplete="email">
                     <span id="email-error" class="error-text" role="alert" aria-live="polite"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Payment Receipt (Optional)
+                    </label>
+                    <div id="ocr-dropzone" class="ocr-upload-zone" role="button" tabindex="0" aria-label="Upload payment receipt to auto-fill reference number">
+                        <input type="file" id="ocr-input" accept="image/png, image/jpeg, image/webp" aria-label="Choose image file">
+                        <svg class="ocr-upload-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M19 13v5c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2v-5H3l9-9 9 9h-2zm-2 0h-3v-5h-4v5H7v5h10v-5z" />
+                        </svg>
+                        <p class="ocr-upload-text">Click or drag & drop to upload receipt</p>
+                        <p class="ocr-upload-subtext">We'll try to auto-fill the Reference Number</p>
+
+                        <div id="ocr-overlay" class="ocr-processing-overlay" role="status" aria-live="polite">
+                            <div class="ocr-spinner"></div>
+                            <span>Scanning receipt...</span>
+                        </div>
+                    </div>
+
+                    <div id="ocr-preview-container" class="ocr-preview-container">
+                        <img id="ocr-preview" class="ocr-preview-image" src="" alt="Receipt preview">
+                    </div>
+                    <div id="ocr-success-badge" class="ocr-success-badge" role="status" aria-live="polite">
+                        <svg class="ocr-success-icon" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        <span id="ocr-success-text">Reference number extracted</span>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -353,6 +140,16 @@
     document.addEventListener('DOMContentLoaded', async () => {
         const productSelect = document.getElementById('product');
         const form = document.getElementById('claim-form');
+
+        // OCR Elements
+        const ocrDropzone = document.getElementById('ocr-dropzone');
+        const ocrInput = document.getElementById('ocr-input');
+        const ocrOverlay = document.getElementById('ocr-overlay');
+        const ocrPreviewContainer = document.getElementById('ocr-preview-container');
+        const ocrPreview = document.getElementById('ocr-preview');
+        const ocrSuccessBadge = document.getElementById('ocr-success-badge');
+        const ocrSuccessText = document.getElementById('ocr-success-text');
+        const refInput = document.getElementById('reference');
         const submitBtn = document.getElementById('submit-btn');
         const statusRegion = document.getElementById('status-region');
         const statusTitle = document.getElementById('status-title');
@@ -481,6 +278,111 @@
             statusMessage.textContent = message;
             // Focus status region for screen readers
             statusRegion.focus();
+        }
+
+        // OCR Upload Logic
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            ocrDropzone.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            ocrDropzone.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            ocrDropzone.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processOcrFile(files[0]);
+            }
+        }
+
+        ocrDropzone.addEventListener('dragover', handleDragOver);
+        ocrDropzone.addEventListener('dragleave', handleDragLeave);
+        ocrDropzone.addEventListener('drop', handleDrop);
+
+        // Click to open file dialog
+        ocrDropzone.addEventListener('click', () => {
+            ocrInput.click();
+        });
+
+        // Keyboard support for dropzone
+        ocrDropzone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                ocrInput.click();
+            }
+        });
+
+        ocrInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                processOcrFile(e.target.files[0]);
+            }
+        });
+
+        async function processOcrFile(file) {
+            // Basic validation
+            if (!file.type.startsWith('image/')) {
+                showError('Please upload an image file (PNG, JPG, WEBP).');
+                return;
+            }
+
+            // Show preview
+            const objectUrl = URL.createObjectURL(file);
+            ocrPreview.src = objectUrl;
+            ocrPreviewContainer.classList.add('active');
+
+            // Reset previous success state
+            ocrSuccessBadge.classList.remove('active');
+
+            // Show loading
+            ocrOverlay.classList.add('active');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/ocr/fallback', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.reference_number) {
+                        // Auto-fill and validate
+                        refInput.value = data.reference_number;
+                        refInput.classList.remove('invalid');
+                        document.getElementById('reference-error').textContent = '';
+
+                        // Show success
+                        ocrSuccessText.textContent = `Extracted Ref: ${data.reference_number}`;
+                        ocrSuccessBadge.classList.add('active');
+
+                        // Screen reader announcement via status region
+                        statusTitle.textContent = 'Success';
+                        statusMessage.textContent = 'Reference number extracted successfully.';
+                        statusRegion.className = 'status-panel success'; // Remove non-existent sr-only class
+
+                    } else {
+                        showError('Could not find a valid 13-digit reference number in the image. Please enter it manually.');
+                    }
+                } else {
+                    showError('Failed to process receipt image. Please try again or enter details manually.');
+                }
+            } catch (error) {
+                showError('Network error while processing image. Please try again.');
+            } finally {
+                ocrOverlay.classList.remove('active');
+            }
         }
     });
 </script>
