@@ -355,3 +355,106 @@ body {
     height: 16px;
     fill: currentColor;
 }
+
+/* Canvas Mobile & Typography Tweaks */
+.form-input, .form-select {
+    min-height: 48px;
+}
+.btn {
+    min-height: 48px;
+}
+
+/* Timeline Component */
+.timeline {
+    margin: 24px 0;
+    padding: 0;
+    list-style: none;
+    text-align: left;
+    position: relative;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 15px;
+    width: 2px;
+    background-color: var(--color-border);
+}
+
+.timeline-step {
+    position: relative;
+    padding-left: 48px;
+    margin-bottom: 24px;
+}
+
+.timeline-step:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--color-bg);
+    border: 2px solid var(--color-border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+}
+
+.timeline-step.active .timeline-icon {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.timeline-step.completed .timeline-icon {
+    border-color: var(--color-success);
+    background-color: var(--color-success);
+    color: white;
+}
+
+.timeline-icon svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.timeline-content {
+    padding-top: 4px;
+}
+
+.timeline-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--color-text);
+    margin: 0 0 4px 0;
+}
+
+.timeline-desc {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+/* Responsive Overrides */
+@media (min-width: 768px) {
+    body {
+        padding: 32px;
+    }
+    .container {
+        max-width: 540px;
+    }
+    .claim-card {
+        padding: 32px;
+    }
+    .brand-header h1 {
+        font-size: 28px;
+    }
+}

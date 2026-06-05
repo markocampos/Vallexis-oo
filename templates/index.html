@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claim Your Digital Product - Vallexis</title>
-    <link rel="stylesheet" href="~/static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <main class="container">
-    <header class="brand-header">
+    <header class="brand-header" role="banner">
         <h1>Claim Your Digital Product</h1>
-        <p class="subtitle">
+        <div class="subtitle" aria-live="polite">
             <svg class="trust-icon" viewBox="0 0 20 20" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-1.998A11.954 11.954 0 0110 1.944zM6.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l5-5a1 1 0 00-1.414-1.414L9 10.586 6.707 9.293z" clip-rule="evenodd" />
             </svg>
-            Secure, instant delivery after payment verification
-        </p>
+            <span><strong>100% Secure:</strong> Instant delivery to your email after payment match</span>
+        </div>
     </header>
 
     <section class="claim-card" aria-labelledby="claim-heading">
@@ -109,22 +109,43 @@
             </fieldset>
         </form>
 
-        <div id="success-state">
+        <div id="success-state" role="status" aria-live="polite">
             <svg class="success-icon" viewBox="0 0 20 20" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
             <h3 style="margin-top:0; color:var(--color-text);">Claim Submitted Successfully</h3>
             <p style="color:var(--color-text-muted); font-size:14px; margin-bottom: 24px;">
-                We are now verifying your payment. Once matched, we will watermark your PDF and send it to your email.
+                We're processing your claim. Here's what happens next:
             </p>
-            <div style="background-color: var(--color-bg); padding: 16px; border-radius: var(--radius); text-align:left; font-size: 14px;">
-                <strong>What happens next?</strong>
-                <ol style="margin-top:8px; margin-bottom:0; padding-left: 20px; color: var(--color-text-muted);">
-                    <li>Payment verified automatically</li>
-                    <li>Secure PDF generated</li>
-                    <li>Download link emailed to you</li>
-                </ol>
-            </div>
+
+            <ul class="timeline" aria-label="Progress timeline">
+                <li class="timeline-step completed">
+                    <div class="timeline-icon" aria-hidden="true">
+                        <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <div class="timeline-content">
+                        <h4 class="timeline-title">Claim Received</h4>
+                        <p class="timeline-desc">Your details have been saved securely.</p>
+                    </div>
+                </li>
+                <li class="timeline-step active">
+                    <div class="timeline-icon" aria-hidden="true">
+                        <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <div class="timeline-content">
+                        <h4 class="timeline-title">Verifying Payment</h4>
+                        <p class="timeline-desc">Auto-matching your reference number.</p>
+                    </div>
+                </li>
+                <li class="timeline-step">
+                    <div class="timeline-icon" aria-hidden="true"></div>
+                    <div class="timeline-content">
+                        <h4 class="timeline-title">Secure Delivery</h4>
+                        <p class="timeline-desc">Watermarking PDF and emailing to you.</p>
+                    </div>
+                </li>
+            </ul>
+
             <button class="btn btn-primary" style="margin-top: 24px;" onclick="window.location.reload()">Submit Another Claim</button>
         </div>
     </section>

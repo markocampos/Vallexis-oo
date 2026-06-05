@@ -25,3 +25,6 @@ assets/
 wheels/
 update_main.py
 assets/asset_1_1234567890123.pdf
+app.db-shm
+app.db-wal
+start_output.log
