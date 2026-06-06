@@ -190,6 +190,10 @@ async def ocr_fallback(file: UploadFile = File(...)):
     """
     Fallback for iOS users: Upload screenshot to parse reference and amount.
     """
+    # Check file content type
+    if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+        raise HTTPException(status_code=415, detail="Unsupported Media Type")
+
     # Check file size
     file_content = await file.read()
     if len(file_content) > MAX_UPLOAD_SIZE:
