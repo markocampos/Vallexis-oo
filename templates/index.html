@@ -185,6 +185,9 @@
                 }
             });
             input.addEventListener('blur', () => {
+                if (input.type !== 'file' && input.value) {
+                    input.value = input.value.trim();
+                }
                 validateInput(input);
             });
         });
@@ -211,8 +214,12 @@
             }
         }
 
+        let isSubmitting = false;
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            if (isSubmitting) return;
 
             // Validate all inputs
             let isValid = true;
@@ -223,6 +230,7 @@
             });
 
             if (!isValid) return;
+            isSubmitting = true;
 
             // Show loading state
             submitBtn.disabled = true;
@@ -269,6 +277,7 @@
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('loading');
+                isSubmitting = false;
             }
         });
 
