@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claim Your Digital Product - Vallexis</title>
-    <link rel="stylesheet" href="~/static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
@@ -180,11 +180,23 @@
         const inputs = form.querySelectorAll('input, select');
         inputs.forEach(input => {
             input.addEventListener('input', () => {
+                if (input.tagName === 'INPUT' && (input.type === 'text' || input.type === 'email')) {
+                    const trimmedStart = input.value.trimStart();
+                    if (input.value !== trimmedStart) {
+                        input.value = trimmedStart;
+                    }
+                }
                 if (input.classList.contains('invalid')) {
                     validateInput(input);
                 }
             });
             input.addEventListener('blur', () => {
+                if (input.tagName === 'INPUT' && (input.type === 'text' || input.type === 'email')) {
+                    const trimmed = input.value.trim();
+                    if (input.value !== trimmed) {
+                        input.value = trimmed;
+                    }
+                }
                 validateInput(input);
             });
         });
@@ -211,8 +223,12 @@
             }
         }
 
+        let isSubmitting = false;
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            if (isSubmitting) return;
 
             // Validate all inputs
             let isValid = true;
@@ -224,6 +240,7 @@
 
             if (!isValid) return;
 
+            isSubmitting = true;
             // Show loading state
             submitBtn.disabled = true;
             submitBtn.classList.add('loading');
@@ -267,6 +284,7 @@
             } catch (error) {
                 showError('A network error occurred. Please check your connection and try again.');
             } finally {
+                isSubmitting = false;
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('loading');
             }
