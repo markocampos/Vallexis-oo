@@ -88,6 +88,15 @@ def test_ocr_fallback_file_size_limit():
     assert response.status_code == 413
     assert response.json()["detail"] == "File too large"
 
+def test_ocr_fallback_invalid_mime_type():
+    content = b"fake pdf content"
+    response = client.post(
+        "/api/ocr/fallback",
+        files={"file": ("test.pdf", content, "application/pdf")}
+    )
+    assert response.status_code == 400
+    assert "Invalid file type" in response.json()["detail"]
+
 def test_html_injection_in_email(monkeypatch):
     import email_service
     import resend
