@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claim Your Digital Product - Vallexis</title>
-    <link rel="stylesheet" href="~/static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
@@ -22,14 +22,14 @@
     <section class="claim-card" aria-labelledby="claim-heading">
         <h2 id="claim-heading">Enter Your Details</h2>
 
-        <form id="claim-form" novalidate>
+        <form id="claim-form" novalidate aria-labelledby="claim-heading">
             <fieldset style="border:none; padding:0; margin:0;">
                 <legend class="sr-only" style="display:none;">Buyer Information</legend>
                 <div class="form-group">
                     <label for="product" class="form-label">
-                        Select Product <span aria-label="required" class="required">*</span>
+                        Select Product <span aria-hidden="true" class="required">*</span><span class="sr-only">required</span>
                     </label>
-                    <select id="product" name="product_id" required class="form-select" aria-describedby="product-error">
+                    <select id="product" name="product_id" required class="form-select" aria-describedby="product-error" aria-required="true">
                         <option value="" disabled selected>Loading products...</option>
                     </select>
                     <span id="product-error" class="error-text" role="alert" aria-live="polite"></span>
@@ -37,17 +37,17 @@
 
                 <div class="form-group">
                     <label for="name" class="form-label">
-                        Full Name <span aria-label="required" class="required">*</span>
+                        Full Name <span aria-hidden="true" class="required">*</span><span class="sr-only">required</span>
                     </label>
-                    <input type="text" id="name" name="buyer_name" required class="form-input" aria-describedby="name-error" placeholder="Juan Dela Cruz" autocomplete="name">
+                    <input type="text" id="name" name="buyer_name" required class="form-input" aria-describedby="name-error" aria-required="true" placeholder="Juan Dela Cruz" autocomplete="name">
                     <span id="name-error" class="error-text" role="alert" aria-live="polite"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="email" class="form-label">
-                        Email Address <span aria-label="required" class="required">*</span>
+                        Email Address <span aria-hidden="true" class="required">*</span><span class="sr-only">required</span>
                     </label>
-                    <input type="email" id="email" name="buyer_email" required class="form-input" aria-describedby="email-error" placeholder="juan@example.com" autocomplete="email">
+                    <input type="email" id="email" name="buyer_email" required class="form-input" aria-describedby="email-error" aria-required="true" placeholder="juan@example.com" autocomplete="email">
                     <span id="email-error" class="error-text" role="alert" aria-live="polite"></span>
                 </div>
 
@@ -82,7 +82,7 @@
 
                 <div class="form-group">
                     <label for="reference" class="form-label">
-                        GCash / Maya Reference Number <span aria-label="required" class="required">*</span>
+                        GCash / Maya Reference Number <span aria-hidden="true" class="required">*</span><span class="sr-only">required</span>
                     </label>
                     <input
                         id="reference"
@@ -94,6 +94,7 @@
                         required
                         class="form-input"
                         aria-describedby="reference-help reference-error"
+                        aria-required="true"
                         placeholder="e.g. 1000000000000"
                     />
                     <span id="reference-help" class="help-text">
@@ -117,15 +118,37 @@
             <p style="color:var(--color-text-muted); font-size:14px; margin-bottom: 24px;">
                 We are now verifying your payment. Once matched, we will watermark your PDF and send it to your email.
             </p>
-            <div style="background-color: var(--color-bg); padding: 16px; border-radius: var(--radius); text-align:left; font-size: 14px;">
+            <div style="background-color: var(--color-bg); padding: 16px; border-radius: var(--radius); text-align:left; font-size: 14px; border: 1px solid var(--color-border);">
                 <strong>What happens next?</strong>
-                <ol style="margin-top:8px; margin-bottom:0; padding-left: 20px; color: var(--color-text-muted);">
-                    <li>Payment verified automatically</li>
-                    <li>Secure PDF generated</li>
-                    <li>Download link emailed to you</li>
-                </ol>
+                <ul class="success-timeline">
+                    <li class="timeline-item completed">
+                        <div class="timeline-icon" aria-hidden="true">
+                            <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <div class="timeline-content">
+                            <p class="timeline-title">Claim Received</p>
+                            <p class="timeline-desc">Your details have been saved.</p>
+                        </div>
+                    </li>
+                    <li class="timeline-item active">
+                        <div class="timeline-icon" aria-hidden="true">
+                             <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <div class="timeline-content">
+                            <p class="timeline-title">Payment Verification</p>
+                            <p class="timeline-desc">Matching your claim with GCash/Maya records.</p>
+                        </div>
+                    </li>
+                    <li class="timeline-item">
+                        <div class="timeline-icon" aria-hidden="true"></div>
+                        <div class="timeline-content">
+                            <p class="timeline-title">Asset Delivery</p>
+                            <p class="timeline-desc">Generating secure PDF and sending to your email.</p>
+                        </div>
+                    </li>
+                </ul>
             </div>
-            <button class="btn btn-primary" style="margin-top: 24px;" onclick="window.location.reload()">Submit Another Claim</button>
+            <button class="btn" style="margin-top: 24px; background-color: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border);" onclick="window.location.reload()">Submit Another Claim</button>
         </div>
     </section>
 
