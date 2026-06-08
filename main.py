@@ -9,6 +9,7 @@ from fastapi import (
 )
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 import database
@@ -26,6 +27,8 @@ models.Base.metadata.create_all(bind=database.engine)
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
 
 app = FastAPI(title="Automated DRM and Delivery API")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 def get_db():
     db = database.SessionLocal()
@@ -190,6 +193,10 @@ async def ocr_fallback(file: UploadFile = File(...)):
     """
     Fallback for iOS users: Upload screenshot to parse reference and amount.
     """
+    allowed_types = ["image/jpeg", "image/png", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=415, detail="Unsupported media type")
+
     # Check file size
     file_content = await file.read()
     if len(file_content) > MAX_UPLOAD_SIZE:
