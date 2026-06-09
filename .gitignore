@@ -25,3 +25,5 @@ assets/
 wheels/
 update_main.py
 assets/asset_1_1234567890123.pdf
+*.pid
+server.log

@@ -14,6 +14,9 @@
     --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
     --transition: 150ms ease;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
 }
 
 * {
@@ -103,6 +106,7 @@ body {
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     font-size: 16px; /* 16px prevents iOS zoom */
+    min-height: 48px; /* Improved touch target size */
     transition: border-color var(--transition), box-shadow var(--transition);
     background-color: #fff;
     color: var(--color-text);
@@ -143,6 +147,7 @@ body {
     align-items: center;
     width: 100%;
     padding: 14px 20px;
+    min-height: 48px; /* Improved touch target size */
     background-color: var(--color-primary);
     color: white;
     border: none;
@@ -354,4 +359,85 @@ body {
     width: 16px;
     height: 16px;
     fill: currentColor;
+}
+
+/* Timeline UI Styles */
+.timeline {
+    margin: var(--spacing-lg) 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    position: relative;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: var(--spacing-sm);
+    bottom: var(--spacing-sm);
+    width: 2px;
+    background-color: var(--color-border);
+    z-index: 0;
+}
+
+.timeline-step {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    position: relative;
+    z-index: 1;
+}
+
+.timeline-indicator {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--color-card);
+    border: 2px solid var(--color-border);
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all var(--transition);
+}
+
+.timeline-step.completed .timeline-indicator {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+}
+
+.timeline-step.completed .timeline-indicator::after {
+    content: '';
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    margin-bottom: 2px;
+}
+
+.timeline-step.active .timeline-indicator {
+    border-color: var(--color-primary);
+    border-width: 3px;
+}
+
+.timeline-step.active .timeline-indicator::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background-color: var(--color-primary);
+    border-radius: 50%;
+}
+
+.timeline-content {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.timeline-step.active .timeline-content,
+.timeline-step.completed .timeline-content {
+    color: var(--color-text);
 }
