@@ -20,6 +20,8 @@ var/
 *.egg
 app.db
 test.db
+*.db-shm
+*.db-wal
 server.log
 assets/
 wheels/

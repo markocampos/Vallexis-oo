@@ -88,6 +88,15 @@ def test_ocr_fallback_file_size_limit():
     assert response.status_code == 413
     assert response.json()["detail"] == "File too large"
 
+def test_ocr_fallback_invalid_mime_type():
+    invalid_content = b"Not an image"
+    response = client.post(
+        "/api/ocr/fallback",
+        files={"file": ("test.txt", invalid_content, "text/plain")}
+    )
+    assert response.status_code == 415
+    assert response.json()["detail"] == "Unsupported file type"
+
 def test_html_injection_in_email(monkeypatch):
     import email_service
     import resend
