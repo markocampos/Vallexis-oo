@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claim Your Digital Product - Vallexis</title>
-    <link rel="stylesheet" href="~/static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
@@ -117,14 +117,26 @@
             <p style="color:var(--color-text-muted); font-size:14px; margin-bottom: 24px;">
                 We are now verifying your payment. Once matched, we will watermark your PDF and send it to your email.
             </p>
-            <div style="background-color: var(--color-bg); padding: 16px; border-radius: var(--radius); text-align:left; font-size: 14px;">
-                <strong>What happens next?</strong>
-                <ol style="margin-top:8px; margin-bottom:0; padding-left: 20px; color: var(--color-text-muted);">
-                    <li>Payment verified automatically</li>
-                    <li>Secure PDF generated</li>
-                    <li>Download link emailed to you</li>
-                </ol>
+
+            <div class="timeline" aria-label="Order status timeline">
+                <div class="timeline-step completed">
+                    <div class="timeline-indicator"></div>
+                    <div class="timeline-content">Claim Submitted</div>
+                </div>
+                <div class="timeline-step active">
+                    <div class="timeline-indicator"></div>
+                    <div class="timeline-content">Payment Verified</div>
+                </div>
+                <div class="timeline-step">
+                    <div class="timeline-indicator"></div>
+                    <div class="timeline-content">Secure PDF Generated</div>
+                </div>
+                <div class="timeline-step">
+                    <div class="timeline-indicator"></div>
+                    <div class="timeline-content">Sent to Email</div>
+                </div>
             </div>
+
             <button class="btn btn-primary" style="margin-top: 24px;" onclick="window.location.reload()">Submit Another Claim</button>
         </div>
     </section>

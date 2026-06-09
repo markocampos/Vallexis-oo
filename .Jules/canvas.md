@@ -2,3 +2,8 @@
 **Learning:** Proper separation of HTML, CSS, and JS enhances maintainability. Semantic HTML combined with custom CSS variables allows for scalable and clear dashboard and documentation layouts without relying on external frameworks.
 **Action:** When redesigning simple UIs, always establish a clear structure (e.g., using sidebars for docs and semantic sections for dashboards), move inline styles to dedicated CSS files, and define custom CSS variables in the `:root` pseudo-class for consistent styling.
 **Files:** dashboard_ui/index.html, dashboard_ui/css/style.css, dashboard_ui/js/script.js, docs_ui/index.html, docs_ui/css/style.css
+
+## 2024-05-24 - Claim page redesign and success timeline
+**Learning:** Adding a visual progression timeline to success states significantly increases user trust and reduces anxiety by clarifying the subsequent steps ("What happens next?"). Proper touch targets (min-height 48px) are critical for form usability on mobile devices. Serving static assets correctly via FastAPI requires an explicit static mount when not using a reverse proxy directly to the assets.
+**Action:** Always include a visual status indicator or timeline for async multi-step processes. Ensure all interactive elements have at least a 48px touch target. Verify static file routing on direct application execution.
+**Files:** templates/index.html, static/style.css, main.py
