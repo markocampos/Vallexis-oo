@@ -111,8 +111,10 @@ async def serve_frontend(request: Request):
 
 
 @app.get("/api/products")
-def get_products(db: Session = Depends(get_db)):
-    return db.query(models.Product).all()
+def get_products(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+    # ⚡ Bolt Optimization: Added pagination (limit/offset) to prevent memory bloat
+    # from unbounded .all() queries, restricting result set to 'limit' items at a time.
+    return db.query(models.Product).offset(skip).limit(limit).all()
 
 
 @app.post("/api/products", response_model=schemas.ProductCreate)
