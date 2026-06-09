@@ -8,6 +8,7 @@ from fastapi import (
     Request,
 )
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse
 from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
@@ -108,6 +109,35 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    """Health check endpoint to verify DB connectivity and worker health."""
+    from sqlalchemy import text
+    import datetime
+
+    try:
+        # Check DB connectivity
+        db.execute(text("SELECT 1"))
+
+        # Check worker health: no pending items older than 10 minutes
+        ten_minutes_ago = datetime.datetime.utcnow() - datetime.timedelta(minutes=10)
+        stale_tasks = (
+            db.query(models.DeliveryQueue)
+            .filter(
+                models.DeliveryQueue.status == "pending",
+                models.DeliveryQueue.created_at < ten_minutes_ago
+            )
+            .count()
+        )
+
+        if stale_tasks > 0:
+            return JSONResponse(status_code=503, content={"status": "unhealthy", "reason": "stale_tasks", "stale_count": stale_tasks})
+
+        return {"status": "healthy"}
+    except Exception as e:
+        return JSONResponse(status_code=503, content={"status": "unhealthy", "reason": "db_error", "error": str(e)})
 
 
 @app.get("/api/products")

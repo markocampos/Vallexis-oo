@@ -4,12 +4,15 @@ import database
 import models
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 import os
+import main
 
 # Create an in-memory SQLite database for testing
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+# Use StaticPool to persist the in-memory db across connections
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -25,6 +28,9 @@ def override_get_db():
 
 
 app.dependency_overrides[database.get_db] = override_get_db
+
+# Patch database.SessionLocal in main to use the testing session
+main.database.SessionLocal = TestingSessionLocal
 
 client = TestClient(app)
 
@@ -117,6 +123,67 @@ def test_html_injection_in_email(monkeypatch):
         assert "<script>" not in captured_params["html"]
     finally:
         os.remove(dummy_pdf_path)
+def test_health_check_healthy():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "healthy"}
+
+def test_health_check_unhealthy_stale_tasks():
+    # Insert a stale task
+    from datetime import datetime, timedelta
+
+    # Because of dependency override, use TestClient dependencies directly
+    # Wait, TestingSessionLocal creates the file if needed. But SQLite doesn't let us write if it thinks it's read-only
+    # or the process isn't managing it. Let's make sure the tables are created in the actual DB it talks to.
+
+    db = TestingSessionLocal()
+    models.Base.metadata.create_all(bind=engine)
+    try:
+        # Create a dummy claim first to avoid FK constraints issues if any
+        claim = models.Claim(
+            product_id=1,
+            buyer_name="Test",
+            buyer_email="test@test.com",
+            reference_number="test_ref_123"
+        )
+        db.add(claim)
+        db.commit()
+        db.refresh(claim)
+
+        old_task = models.DeliveryQueue(
+            claim_id=claim.id,
+            pdf_path="dummy.pdf",
+            status="pending",
+            created_at=datetime.utcnow() - timedelta(minutes=15)
+        )
+        db.add(old_task)
+        db.commit()
+
+
+        # Verify it actually inserted by checking inside the loop
+        tasks = db.query(models.DeliveryQueue).all()
+        assert len(tasks) > 0
+
+        response = client.get("/health")
+        assert response.status_code == 503
+        data = response.json()
+        assert data["status"] == "unhealthy"
+        assert data["reason"] == "stale_tasks"
+        assert data["stale_count"] >= 1
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        # Cleanup
+        try:
+            db.query(models.DeliveryQueue).filter(models.DeliveryQueue.id == old_task.id).delete()
+            db.query(models.Claim).filter(models.Claim.id == claim.id).delete()
+            db.commit()
+        except Exception:
+            db.rollback()
+        db.close()
+
+
 def test_match_and_fulfill_missing_claim():
     # Setup test database and dependency overrides first
     engine = create_engine(
