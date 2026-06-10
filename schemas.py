@@ -15,7 +15,12 @@ class PaymentNotificationCreate(BaseModel):
     sender_name: Optional[str] = Field(None, max_length=250)
 
 
+class SellerCreate(BaseModel):
+    pass
+
+
 class ProductCreate(BaseModel):
+    seller_id: Optional[int] = None
     name: str
     price: float
     filepath: str
