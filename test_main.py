@@ -6,15 +6,21 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
 
+from sqlalchemy.pool import StaticPool
+
 # Create an in-memory SQLite database for testing
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 models.Base.metadata.create_all(bind=engine)
 
+
+from main import get_db
 
 def override_get_db():
     try:
@@ -24,7 +30,7 @@ def override_get_db():
         db.close()
 
 
-app.dependency_overrides[database.get_db] = override_get_db
+app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
@@ -136,3 +142,151 @@ def test_match_and_fulfill_missing_claim():
     finally:
         if os.path.exists("test.db"):
             os.remove("test.db")
+
+def test_create_seller():
+    # Setup test database and dependency overrides first
+    db = TestingSessionLocal()
+    # Add a seller directly
+    seller = models.Seller(subscription_status="free")
+    db.add(seller)
+    db.commit()
+    db.refresh(seller)
+    db.close()
+
+    response = client.post("/api/sellers", json={})
+    assert response.status_code == 200
+
+def test_product_subscription_gating():
+    # Attempt to create product with seller_id=1 (which is "free")
+    response = client.post(
+        "/api/products",
+        json={
+            "seller_id": 1,
+            "name": "Test Planner Gated",
+            "price": 500.0,
+            "filepath": "assets/test_planner.pdf",
+        },
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Active subscription required"
+
+def test_paymongo_webhook_invalid_signature():
+    response = client.post(
+        "/api/webhooks/paymongo",
+        headers={"Paymongo-Signature": "t=123,te=invalid"},
+        json={"data": {}}
+    )
+    assert response.status_code == 400
+
+def test_paymongo_webhook_valid_signature_subscription_activated():
+    import hmac, hashlib, json, os, time
+
+    # Setup seller with paymongo ID
+    db = TestingSessionLocal()
+    seller = models.Seller(subscription_status="free", paymongo_subscription_id="sub_123")
+    db.add(seller)
+    db.commit()
+    db.refresh(seller)
+    seller_id = seller.id
+    db.close()
+
+    payload = {
+        "data": {
+            "attributes": {
+                "type": "subscription.activated",
+                "data": {
+                    "id": "sub_123"
+                }
+            }
+        }
+    }
+
+    body = json.dumps(payload).encode()
+    timestamp = str(int(time.time()))
+    secret = os.environ.get("PAYMONGO_WEBHOOK_SECRET", "test_secret").encode()
+    mac = hmac.new(secret, f"{timestamp}.{body.decode()}".encode(), hashlib.sha256).hexdigest()
+
+    signature = f"t={timestamp},te={mac}"
+
+    response = client.post(
+        "/api/webhooks/paymongo",
+        headers={"Paymongo-Signature": signature},
+        content=body
+    )
+    # The tests were using TestClient but not using the overridden dependency properly for the db commit?
+    # Actually wait. The override logic in test_main.py:
+    # app.dependency_overrides[database.get_db] = override_get_db
+    # BUT main.py's match_and_fulfill creates its own session.
+    # The webhook endpoint uses the db injected from Depends(get_db).
+    assert response.status_code == 200
+
+    # Check if seller is now active
+    db = TestingSessionLocal()
+    seller = db.query(models.Seller).filter(models.Seller.id == seller_id).first()
+    assert seller.subscription_status == "active"
+    db.close()
+
+def test_product_creation_after_subscription():
+    db = TestingSessionLocal()
+    seller = models.Seller(subscription_status="active")
+    db.add(seller)
+    db.commit()
+    db.refresh(seller)
+    seller_id = seller.id
+    db.close()
+
+    response = client.post(
+        "/api/products",
+        json={
+            "seller_id": seller_id,
+            "name": "Test Planner Active",
+            "price": 500.0,
+            "filepath": "assets/test_planner.pdf",
+        },
+    )
+    assert response.status_code == 200
+
+def test_paymongo_webhook_invoice_payment_failed():
+    import hmac, hashlib, json, os, time
+
+    # Setup seller with paymongo ID
+    db = TestingSessionLocal()
+    seller = models.Seller(subscription_status="active", paymongo_subscription_id="sub_failed_123")
+    db.add(seller)
+    db.commit()
+    db.refresh(seller)
+    seller_id = seller.id
+    db.close()
+
+    payload = {
+        "data": {
+            "attributes": {
+                "type": "invoice.payment_failed",
+                "data": {
+                    "attributes": {
+                            "subscription_id": "sub_failed_123"
+                    }
+                }
+            }
+        }
+    }
+
+    body = json.dumps(payload).encode()
+    timestamp = str(int(time.time()))
+    secret = os.environ.get("PAYMONGO_WEBHOOK_SECRET", "test_secret").encode()
+    mac = hmac.new(secret, f"{timestamp}.{body.decode()}".encode(), hashlib.sha256).hexdigest()
+
+    signature = f"t={timestamp},te={mac}"
+
+    response = client.post(
+        "/api/webhooks/paymongo",
+        headers={"Paymongo-Signature": signature},
+        content=body
+    )
+    assert response.status_code == 200
+
+    # Check if seller is now free
+    db = TestingSessionLocal()
+    seller = db.query(models.Seller).filter(models.Seller.id == seller_id).first()
+    assert seller.subscription_status == "free"
+    db.close()

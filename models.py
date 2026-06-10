@@ -4,10 +4,19 @@ from database import Base
 import datetime
 
 
+class Seller(Base):
+    __tablename__ = "sellers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    subscription_status = Column(String, default="free")
+    paymongo_subscription_id = Column(String, index=True, nullable=True)
+
+
 class Product(Base):
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, index=True)
+    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=True)
     name = Column(String, index=True)
     price = Column(Float)
     filepath = Column(String)  # Path to the original PDF

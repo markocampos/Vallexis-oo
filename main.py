@@ -10,6 +10,8 @@ from fastapi import (
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
+import hmac
+import hashlib
 from sqlalchemy.orm import Session
 import database
 import models
@@ -110,6 +112,15 @@ async def serve_frontend(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+@app.post("/api/sellers", response_model=schemas.SellerCreate)
+def create_seller(seller: schemas.SellerCreate, db: Session = Depends(get_db)):
+    db_seller = models.Seller(**seller.model_dump())
+    db.add(db_seller)
+    db.commit()
+    db.refresh(db_seller)
+    return seller
+
+
 @app.get("/api/products")
 def get_products(db: Session = Depends(get_db)):
     return db.query(models.Product).all()
@@ -117,6 +128,10 @@ def get_products(db: Session = Depends(get_db)):
 
 @app.post("/api/products", response_model=schemas.ProductCreate)
 def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    if product.seller_id:
+        seller = db.query(models.Seller).filter(models.Seller.id == product.seller_id).first()
+        if not seller or seller.subscription_status != "active":
+            raise HTTPException(status_code=403, detail="Active subscription required")
     db_product = models.Product(**product.model_dump())
     db.add(db_product)
     db.commit()
@@ -183,6 +198,44 @@ def receive_email_webhook(
     # Try to match immediately in case claim arrived first
     background_tasks.add_task(match_and_fulfill, notification.reference_number)
     return notification
+
+
+@app.post("/api/webhooks/paymongo")
+async def paymongo_webhook(request: Request, db: Session = Depends(get_db)):
+    signature_header = request.headers.get("Paymongo-Signature", "")
+    body = await request.body()
+
+    sigs = dict(x.split("=", 1) for x in signature_header.split(",") if "=" in x)
+    timestamp = sigs.get("t", "")
+
+    secret = os.environ.get("PAYMONGO_WEBHOOK_SECRET", "test_secret").encode()
+    payload = f"{timestamp}.{body.decode()}".encode()
+    mac = hmac.new(secret, payload, hashlib.sha256).hexdigest()
+
+    te_sig = sigs.get("te", "")
+    li_sig = sigs.get("li", "")
+    if not (hmac.compare_digest(mac, te_sig) or hmac.compare_digest(mac, li_sig)):
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    data = await request.json()
+    event_type = data.get("data", {}).get("attributes", {}).get("type")
+
+    if event_type == "subscription.activated":
+        sub_id = data["data"]["attributes"]["data"]["id"]
+        seller = db.query(models.Seller).filter(models.Seller.paymongo_subscription_id == sub_id).first()
+        if seller:
+            seller.subscription_status = "active"
+            db.commit()
+    elif event_type == "invoice.payment_failed":
+        # Usually from a subscription invoice
+        sub_id = data.get("data", {}).get("attributes", {}).get("data", {}).get("attributes", {}).get("subscription_id")
+        if sub_id:
+            seller = db.query(models.Seller).filter(models.Seller.paymongo_subscription_id == sub_id).first()
+            if seller:
+                seller.subscription_status = "free"
+                db.commit()
+
+    return {"status": "ok"}
 
 
 @app.post("/api/ocr/fallback", response_model=schemas.OCRResponse)
