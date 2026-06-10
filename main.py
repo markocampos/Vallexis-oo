@@ -111,8 +111,8 @@ async def serve_frontend(request: Request):
 
 
 @app.get("/api/products")
-def get_products(db: Session = Depends(get_db)):
-    return db.query(models.Product).all()
+def get_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return db.query(models.Product).offset(skip).limit(limit).all()
 
 
 @app.post("/api/products", response_model=schemas.ProductCreate)
@@ -190,6 +190,10 @@ async def ocr_fallback(file: UploadFile = File(...)):
     """
     Fallback for iOS users: Upload screenshot to parse reference and amount.
     """
+    allowed_types = ["image/jpeg", "image/png", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and WEBP are allowed.")
+
     # Check file size
     file_content = await file.read()
     if len(file_content) > MAX_UPLOAD_SIZE:
