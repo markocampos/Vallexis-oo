@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claim Your Digital Product - Vallexis</title>
-    <link rel="stylesheet" href="~/static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
@@ -27,7 +27,7 @@
                 <legend class="sr-only" style="display:none;">Buyer Information</legend>
                 <div class="form-group">
                     <label for="product" class="form-label">
-                        Select Product <span aria-label="required" class="required">*</span>
+                        Select Product <span class="sr-only">required</span><span aria-hidden="true" class="required">*</span>
                     </label>
                     <select id="product" name="product_id" required class="form-select" aria-describedby="product-error">
                         <option value="" disabled selected>Loading products...</option>
@@ -37,7 +37,7 @@
 
                 <div class="form-group">
                     <label for="name" class="form-label">
-                        Full Name <span aria-label="required" class="required">*</span>
+                        Full Name <span class="sr-only">required</span><span aria-hidden="true" class="required">*</span>
                     </label>
                     <input type="text" id="name" name="buyer_name" required class="form-input" aria-describedby="name-error" placeholder="Juan Dela Cruz" autocomplete="name">
                     <span id="name-error" class="error-text" role="alert" aria-live="polite"></span>
@@ -45,7 +45,7 @@
 
                 <div class="form-group">
                     <label for="email" class="form-label">
-                        Email Address <span aria-label="required" class="required">*</span>
+                        Email Address <span class="sr-only">required</span><span aria-hidden="true" class="required">*</span>
                     </label>
                     <input type="email" id="email" name="buyer_email" required class="form-input" aria-describedby="email-error" placeholder="juan@example.com" autocomplete="email">
                     <span id="email-error" class="error-text" role="alert" aria-live="polite"></span>
@@ -82,7 +82,7 @@
 
                 <div class="form-group">
                     <label for="reference" class="form-label">
-                        GCash / Maya Reference Number <span aria-label="required" class="required">*</span>
+                        GCash / Maya Reference Number <span class="sr-only">required</span><span aria-hidden="true" class="required">*</span>
                     </label>
                     <input
                         id="reference"
@@ -185,9 +185,14 @@
                 }
             });
             input.addEventListener('blur', () => {
+                if (input.type === 'text' || input.type === 'email') {
+                    input.value = input.value.trim();
+                }
                 validateInput(input);
             });
         });
+
+        let isSubmitting = false;
 
         function validateInput(input) {
             const errorElement = document.getElementById(`${input.id}-error`);
@@ -214,6 +219,8 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            if (isSubmitting) return;
+
             // Validate all inputs
             let isValid = true;
             inputs.forEach(input => {
@@ -223,6 +230,8 @@
             });
 
             if (!isValid) return;
+
+            isSubmitting = true;
 
             // Show loading state
             submitBtn.disabled = true;
@@ -269,6 +278,7 @@
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('loading');
+                isSubmitting = false;
             }
         });
 

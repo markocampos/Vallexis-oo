@@ -9,6 +9,7 @@ from fastapi import (
 )
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 import database
@@ -26,6 +27,8 @@ models.Base.metadata.create_all(bind=database.engine)
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
 
 app = FastAPI(title="Automated DRM and Delivery API")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 def get_db():
     db = database.SessionLocal()
