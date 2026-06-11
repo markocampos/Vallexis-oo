@@ -11,3 +11,7 @@
 **Learning:** Raw user input should never be interpolated into HTML payloads without escaping. It allows attackers to run scripts or distort content structure in the client.
 **Prevention:** Always use `html.escape()` or dedicated templating engines (like Jinja2 with autoescaping) to sanitize user input prior to rendering HTML.
 ## 2026-06-04 - Hardcoded Credentials in Resend Setup\n**Vulnerability:** A hardcoded dummy API key fallback was used for Resend initialization.\n**Learning:** Relying on default fallback strings for API keys hides missing configuration errors and could be abused or cause runtime type errors when used blindly.\n**Prevention:** Rely strictly on environment variables for sensitive tokens and handle their absence explicitly using proper branching (e.g. `if api_key:`) to enable mock fallbacks in testing environments.
+## 2024-06-04 - Fix Unvalidated File Upload in OCR Fallback
+**Vulnerability:** The `/api/ocr/fallback` endpoint allowed uploading files of any type and content because it lacked validation on `file.content_type` and didn't verify file magic bytes, allowing for potential malicious file uploads.
+**Learning:** Checking the `content_type` of a request is not enough, as it can be easily spoofed. Ensuring that the file content's magic bytes actually match the claimed image format provides an additional and necessary layer of defense.
+**Prevention:** Always validate both the `content_type` header and the internal file signature (magic bytes) against an allowed list when handling file uploads.
