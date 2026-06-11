@@ -81,12 +81,33 @@ def test_full_flow():
 def test_ocr_fallback_file_size_limit():
     # 5MB + 1 byte
     large_content = b"a" * (5 * 1024 * 1024 + 1)
+    # Give it a valid magic byte prefix to bypass the format check if it happens before size check
+    # But in our code, content type check -> size check -> magic byte check
     response = client.post(
         "/api/ocr/fallback",
         files={"file": ("large_image.png", large_content, "image/png")}
     )
     assert response.status_code == 413
     assert response.json()["detail"] == "File too large"
+
+def test_ocr_fallback_invalid_content_type():
+    content = b"some fake image content"
+    response = client.post(
+        "/api/ocr/fallback",
+        files={"file": ("fake_image.txt", content, "text/plain")}
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Only PNG, JPG, and WEBP images are allowed"
+
+def test_ocr_fallback_invalid_magic_bytes():
+    # Correct content type, but not valid image bytes
+    content = b"Not a real image"
+    response = client.post(
+        "/api/ocr/fallback",
+        files={"file": ("fake_image.png", content, "image/png")}
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Invalid image file format"
 
 def test_html_injection_in_email(monkeypatch):
     import email_service
