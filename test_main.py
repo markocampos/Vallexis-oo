@@ -80,13 +80,44 @@ def test_full_flow():
 
 def test_ocr_fallback_file_size_limit():
     # 5MB + 1 byte
-    large_content = b"a" * (5 * 1024 * 1024 + 1)
+    large_content = b"\x89PNG\r\n\x1a\n" + b"a" * (5 * 1024 * 1024 + 1)
     response = client.post(
         "/api/ocr/fallback",
         files={"file": ("large_image.png", large_content, "image/png")}
     )
     assert response.status_code == 413
     assert response.json()["detail"] == "File too large"
+
+def test_ocr_fallback_unsupported_mime():
+    response = client.post(
+        "/api/ocr/fallback",
+        files={"file": ("test.pdf", b"%PDF-1.4", "application/pdf")}
+    )
+    assert response.status_code == 415
+    assert response.json()["detail"] == "Unsupported file type"
+
+def test_ocr_fallback_invalid_magic_bytes():
+    response = client.post(
+        "/api/ocr/fallback",
+        files={"file": ("fake.png", b"not-a-png-file", "image/png")}
+    )
+    assert response.status_code == 415
+    assert response.json()["detail"] == "Invalid file signature"
+
+def test_ocr_fallback_valid_magic_bytes():
+    # Only test the upload validation part. The ocr_service might crash on mock data,
+    # but the validation part should pass and it shouldn't be 415.
+    pass # Wait, if I upload valid bytes, it goes to Tesseract and might error or return 200.
+         # The Tesseract step is mocked or just runs. Tesseract might fail on a tiny invalid image and return 500.
+         # So we just test that it DOES NOT return 415.
+
+    valid_png_content = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xf8\xff\xff?\x03\x00\x08\xfc\x02\xfe\xa9\x1e\x87T\x00\x00\x00\x00IEND\xaeB`\x82"
+    response = client.post(
+        "/api/ocr/fallback",
+        files={"file": ("test.png", valid_png_content, "image/png")}
+    )
+    # Tesseract might not find text or might crash, but it shouldn't be 415.
+    assert response.status_code != 415
 
 def test_html_injection_in_email(monkeypatch):
     import email_service

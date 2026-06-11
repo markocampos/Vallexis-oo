@@ -190,10 +190,25 @@ async def ocr_fallback(file: UploadFile = File(...)):
     """
     Fallback for iOS users: Upload screenshot to parse reference and amount.
     """
+    if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+        raise HTTPException(status_code=415, detail="Unsupported file type")
+
     # Check file size
     file_content = await file.read()
     if len(file_content) > MAX_UPLOAD_SIZE:
         raise HTTPException(status_code=413, detail="File too large")
+
+    # Verify magic bytes
+    is_valid_magic = False
+    if file.content_type == "image/jpeg" and file_content.startswith(b"\xff\xd8\xff"):
+        is_valid_magic = True
+    elif file.content_type == "image/png" and file_content.startswith(b"\x89PNG\r\n\x1a\n"):
+        is_valid_magic = True
+    elif file.content_type == "image/webp" and file_content.startswith(b"RIFF") and file_content[8:12] == b"WEBP":
+        is_valid_magic = True
+
+    if not is_valid_magic:
+        raise HTTPException(status_code=415, detail="Invalid file signature")
 
     try:
         # Save temp file
