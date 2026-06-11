@@ -4,12 +4,16 @@ import database
 import models
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 import os
+from main import get_db
 
 # Create an in-memory SQLite database for testing
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -25,16 +29,31 @@ def override_get_db():
 
 
 app.dependency_overrides[database.get_db] = override_get_db
+app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
 
 def test_full_flow():
     import random
+
+    # Pre-requisite: Create a Seller first since products need a seller with active sub
+    # and we need to drop/recreate db specifically for this test
+    models.Base.metadata.drop_all(bind=engine)
+    models.Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    seller = models.Seller(paymongo_subscription_id="sub_test", subscription_status="active")
+    db.add(seller)
+    db.commit()
+    db.refresh(seller)
+    seller_id = seller.id
+    db.close()
+
     # 1. Create Product
     response = client.post(
         "/api/products",
         json={
+            "seller_id": seller_id,
             "name": "Test Planner",
             "price": 500.0,
             "filepath": "assets/test_planner.pdf",
@@ -117,18 +136,21 @@ def test_html_injection_in_email(monkeypatch):
         assert "<script>" not in captured_params["html"]
     finally:
         os.remove(dummy_pdf_path)
-def test_match_and_fulfill_missing_claim():
+def test_match_and_fulfill_missing_claim(monkeypatch):
     # Setup test database and dependency overrides first
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
     )
+    models.Base.metadata.drop_all(bind=engine)
     models.Base.metadata.create_all(bind=engine)
 
     from main import match_and_fulfill
+    import database
 
     # Temporarily override database connection in main if needed,
     # but match_and_fulfill creates its own SessionLocal directly
     # To properly test this, we should make sure we test against a clear DB
+    monkeypatch.setattr(database, "SessionLocal", TestingSessionLocal)
     try:
         # Should return False for a non-existent claim reference
         result = match_and_fulfill("nonexistent_reference_123")

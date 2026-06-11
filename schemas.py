@@ -16,6 +16,7 @@ class PaymentNotificationCreate(BaseModel):
 
 
 class ProductCreate(BaseModel):
+    seller_id: int
     name: str
     price: float
     filepath: str

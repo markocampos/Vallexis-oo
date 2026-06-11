@@ -19,6 +19,9 @@ import ocr_service
 import os
 import tempfile
 import re
+import hmac
+import hashlib
+import json
 
 # Create the database tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -117,6 +120,10 @@ def get_products(db: Session = Depends(get_db)):
 
 @app.post("/api/products", response_model=schemas.ProductCreate)
 def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    seller = db.query(models.Seller).filter(models.Seller.id == product.seller_id).first()
+    if not seller or seller.subscription_status != "active":
+        raise HTTPException(status_code=403, detail="Active subscription required")
+
     db_product = models.Product(**product.model_dump())
     db.add(db_product)
     db.commit()
@@ -184,6 +191,49 @@ def receive_email_webhook(
     background_tasks.add_task(match_and_fulfill, notification.reference_number)
     return notification
 
+
+# Add a simple PayMongo webhook endpoint with HMAC verification
+PAYMONGO_SECRET = os.environ.get("PAYMONGO_WEBHOOK_SECRET", "test_secret")
+
+@app.post("/api/webhooks/paymongo")
+async def paymongo_webhook(request: Request, db: Session = Depends(get_db)):
+    payload = await request.body()
+    signature = request.headers.get("Paymongo-Signature", "")
+
+    t, te = "", ""
+    for part in signature.split(","):
+        if part.startswith("t="):
+            t = part[2:]
+        elif part.startswith("te="):
+            te = part[3:]
+
+    if not t or not te:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    expected_sig = hmac.new(
+        PAYMONGO_SECRET.encode(),
+        f"{t}.{payload.decode()}".encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected_sig, te):
+        raise HTTPException(status_code=401, detail="Signature mismatch")
+
+    data = json.loads(payload)
+    event_type = data.get("data", {}).get("attributes", {}).get("type")
+    event_data = data.get("data", {}).get("attributes", {}).get("data", {})
+
+    # Handle subscription events
+    if event_type in ["subscription.activated", "invoice.payment_failed"]:
+        sub_id = event_data.get("id") if event_type == "subscription.activated" else event_data.get("attributes", {}).get("subscription_id")
+
+        if sub_id:
+            seller = db.query(models.Seller).filter(models.Seller.paymongo_subscription_id == sub_id).first()
+            if seller:
+                seller.subscription_status = "active" if event_type == "subscription.activated" else "inactive"
+                db.commit()
+
+    return {"status": "ok"}
 
 @app.post("/api/ocr/fallback", response_model=schemas.OCRResponse)
 async def ocr_fallback(file: UploadFile = File(...)):
