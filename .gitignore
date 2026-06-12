@@ -25,3 +25,7 @@ assets/
 wheels/
 update_main.py
 assets/asset_1_1234567890123.pdf
+node_modules
+test_ui.js
+*.db-shm
+*.db-wal

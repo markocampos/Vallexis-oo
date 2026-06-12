@@ -166,7 +166,10 @@
                      productSelect.innerHTML += `<option value="1">Default Planner Template</option>`;
                 } else {
                     products.forEach(p => {
-                        productSelect.innerHTML += `<option value="${p.id}">${p.name} (PHP ${p.price})</option>`;
+                        const option = document.createElement('option');
+                        option.value = p.id;
+                        option.textContent = `${p.name} (PHP ${p.price})`;
+                        productSelect.appendChild(option);
                     });
                 }
             } else {
