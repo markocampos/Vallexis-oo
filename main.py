@@ -8,6 +8,7 @@ from fastapi import (
     Request,
 )
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
@@ -107,6 +108,7 @@ def match_and_fulfill(reference_number: str):
 
 templates = Jinja2Templates(directory="templates")
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend(request: Request):
