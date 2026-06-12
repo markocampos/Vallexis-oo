@@ -43,3 +43,26 @@ def send_delivery_email(buyer_email: str, buyer_name: str, pdf_path: str):
     except Exception as e:
         print(f"Failed to send email: {e}")
         raise
+
+
+def notify_payment_failed(seller_email: str):
+    """
+    Notifies a seller that their subscription payment failed.
+    """
+    params: resend.Emails.SendParams = {
+        "from": "billing@yourdomain.com",
+        "to": [seller_email],
+        "subject": "Action Required: Subscription Payment Failed",
+        "html": "<p>Hi there,</p><p>We were unable to process your subscription payment. Your account has been paused until the payment is resolved.</p>",
+    }
+
+    try:
+        if resend.api_key and "dummy_key" not in resend.api_key:
+            email = resend.Emails.send(params)
+            return email
+        else:
+            print(f"[MOCK EMAIL] Payment failed notification sent to {seller_email}")
+            return {"id": "mock_id"}
+    except Exception as e:
+        print(f"Failed to send payment failed email: {e}")
+        raise
