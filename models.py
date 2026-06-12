@@ -8,6 +8,7 @@ class Seller(Base):
     __tablename__ = "sellers"
 
     id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, nullable=True)
     paymongo_subscription_id = Column(String, index=True, unique=True)
     subscription_status = Column(String, default="inactive")
 

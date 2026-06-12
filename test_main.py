@@ -158,3 +158,76 @@ def test_match_and_fulfill_missing_claim(monkeypatch):
     finally:
         if os.path.exists("test.db"):
             os.remove("test.db")
+
+def test_paymongo_webhook_invoice_payment_failed(monkeypatch):
+    import json
+    import hmac
+    import hashlib
+    from main import PAYMONGO_SECRET
+    import email_service
+
+    # Clean the database and setup a seller
+    models.Base.metadata.drop_all(bind=engine)
+    models.Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    seller = models.Seller(
+        email="seller@example.com",
+        paymongo_subscription_id="sub_failed_123",
+        subscription_status="active"
+    )
+    db.add(seller)
+    db.commit()
+    db.refresh(seller)
+    seller_id = seller.id
+    db.close()
+
+    # Create mock for notification
+    notification_called = []
+    def mock_notify_payment_failed(email):
+        notification_called.append(email)
+
+    monkeypatch.setattr(email_service, "notify_payment_failed", mock_notify_payment_failed)
+
+    # Prepare webhook payload
+    payload = {
+        "data": {
+            "attributes": {
+                "type": "invoice.payment_failed",
+                "data": {
+                    "attributes": {
+                        "subscription_id": "sub_failed_123"
+                    }
+                }
+            }
+        }
+    }
+    payload_str = json.dumps(payload)
+
+    # Calculate HMAC signature
+    timestamp = "1234567890"
+    signature_data = f"{timestamp}.{payload_str}".encode()
+    signature_hash = hmac.new(
+        PAYMONGO_SECRET.encode(),
+        signature_data,
+        hashlib.sha256
+    ).hexdigest()
+
+    signature_header = f"t={timestamp},te={signature_hash},li="
+
+    response = client.post(
+        "/api/webhooks/paymongo",
+        data=payload_str,
+        headers={
+            "Paymongo-Signature": signature_header
+        }
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+    assert "seller@example.com" in notification_called
+
+    # Verify database update
+    db = TestingSessionLocal()
+    updated_seller = db.query(models.Seller).filter(models.Seller.id == seller_id).first()
+    assert updated_seller.subscription_status == "inactive"
+    db.close()

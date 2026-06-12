@@ -232,6 +232,12 @@ async def paymongo_webhook(request: Request, db: Session = Depends(get_db)):
             if seller:
                 seller.subscription_status = "active" if event_type == "subscription.activated" else "inactive"
                 db.commit()
+                if event_type == "invoice.payment_failed" and seller.email:
+                    import email_service
+                    try:
+                        email_service.notify_payment_failed(seller.email)
+                    except Exception as e:
+                        print(f"Failed to send payment failed notification to {seller.email}: {e}")
 
     return {"status": "ok"}
 
