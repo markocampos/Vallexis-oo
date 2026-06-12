@@ -34,6 +34,61 @@ app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 
+def test_health_check_healthy():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "healthy"}
+
+def test_health_check_stalled_worker():
+    import datetime
+    db = TestingSessionLocal()
+
+    seller = models.Seller(paymongo_subscription_id="sub_test_stalled", subscription_status="active")
+    db.add(seller)
+    db.commit()
+    db.refresh(seller)
+
+    product = models.Product(
+        seller_id=seller.id, name="Test PDF", price=10.0, filepath="test.pdf"
+    )
+    db.add(product)
+    db.commit()
+    db.refresh(product)
+
+    claim = models.Claim(
+        product_id=product.id,
+        buyer_name="Test Buyer",
+        buyer_email="buyer@test.com",
+        reference_number="STALLED-REF",
+    )
+    db.add(claim)
+    db.commit()
+    db.refresh(claim)
+
+    stalled_queue_item = models.DeliveryQueue(
+        claim_id=claim.id,
+        pdf_path="stalled.pdf",
+        status="pending",
+        created_at=datetime.datetime.utcnow() - datetime.timedelta(minutes=15)
+    )
+    db.add(stalled_queue_item)
+    db.commit()
+    db.close()
+
+    response = client.get("/health")
+
+    # Cleanup
+    db = TestingSessionLocal()
+
+    # Re-fetch ids if needed, but we can just clear everything for tests
+    models.Base.metadata.drop_all(bind=engine)
+    models.Base.metadata.create_all(bind=engine)
+
+    db.close()
+
+    assert response.status_code == 503
+    assert "Worker stalled" in response.json()["detail"]
+
 def test_full_flow():
     import random
 
