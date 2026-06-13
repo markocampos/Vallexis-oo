@@ -25,3 +25,6 @@ class ProductCreate(BaseModel):
 class OCRResponse(BaseModel):
     reference_number: Optional[str]
     amount: Optional[float]
+
+class CheckoutCreate(BaseModel):
+    product_id: int
