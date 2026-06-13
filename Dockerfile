@@ -31,6 +31,9 @@ RUN pip install --no-cache /wheels/*
 # Copy source code
 COPY . .
 
+RUN groupadd -r appuser && useradd -r -g appuser appuser && chown -R appuser:appuser /app
+USER appuser
+
 # Expose port for FastAPI
 EXPOSE 8000
 
