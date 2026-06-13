@@ -200,14 +200,16 @@ async def paymongo_webhook(request: Request, db: Session = Depends(get_db)):
     payload = await request.body()
     signature = request.headers.get("Paymongo-Signature", "")
 
-    t, te = "", ""
+    t, te, li = "", "", ""
     for part in signature.split(","):
         if part.startswith("t="):
             t = part[2:]
         elif part.startswith("te="):
             te = part[3:]
+        elif part.startswith("li="):
+            li = part[3:]
 
-    if not t or not te:
+    if not t or (not te and not li):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
     expected_sig = hmac.new(
@@ -216,7 +218,13 @@ async def paymongo_webhook(request: Request, db: Session = Depends(get_db)):
         hashlib.sha256
     ).hexdigest()
 
-    if not hmac.compare_digest(expected_sig, te):
+    sig_match = False
+    if te and hmac.compare_digest(expected_sig, te):
+        sig_match = True
+    if li and hmac.compare_digest(expected_sig, li):
+        sig_match = True
+
+    if not sig_match:
         raise HTTPException(status_code=401, detail="Signature mismatch")
 
     data = json.loads(payload)
