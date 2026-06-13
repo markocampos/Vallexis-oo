@@ -11,6 +11,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
+from sqlalchemy import text
+import datetime
 import database
 import models
 import schemas
@@ -107,6 +109,27 @@ def match_and_fulfill(reference_number: str):
 
 templates = Jinja2Templates(directory="templates")
 
+
+@app.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    """Health endpoint for checking DB and worker status."""
+    try:
+        # Check DB connectivity
+        db.execute(text("SELECT 1"))
+
+        # Check worker health: no pending items older than 10 mins
+        ten_mins_ago = datetime.datetime.utcnow() - datetime.timedelta(minutes=10)
+        stalled_jobs = db.query(models.DeliveryQueue).filter(
+            models.DeliveryQueue.status == "pending",
+            models.DeliveryQueue.created_at < ten_mins_ago
+        ).count()
+
+        if stalled_jobs > 0:
+            return {"status": "degraded", "detail": f"{stalled_jobs} stalled delivery jobs"}
+
+        return {"status": "ok"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Database connection failed: {str(e)}")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend(request: Request):

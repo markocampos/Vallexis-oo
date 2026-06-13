@@ -136,6 +136,11 @@ def test_html_injection_in_email(monkeypatch):
         assert "<script>" not in captured_params["html"]
     finally:
         os.remove(dummy_pdf_path)
+def test_health_check_ok():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
 def test_match_and_fulfill_missing_claim(monkeypatch):
     # Setup test database and dependency overrides first
     engine = create_engine(
