@@ -42,7 +42,7 @@ def test_full_flow():
     models.Base.metadata.drop_all(bind=engine)
     models.Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
-    seller = models.Seller(paymongo_subscription_id="sub_test", subscription_status="active")
+    seller = models.Seller(paymongo_subscription_id="sub_test_checkout", subscription_status="active")
     db.add(seller)
     db.commit()
     db.refresh(seller)
@@ -138,11 +138,9 @@ def test_html_injection_in_email(monkeypatch):
         os.remove(dummy_pdf_path)
 def test_match_and_fulfill_missing_claim(monkeypatch):
     # Setup test database and dependency overrides first
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-    )
-    models.Base.metadata.drop_all(bind=engine)
-    models.Base.metadata.create_all(bind=engine)
+    import test_main
+    models.Base.metadata.drop_all(bind=test_main.engine)
+    models.Base.metadata.create_all(bind=test_main.engine)
 
     from main import match_and_fulfill
     import database
@@ -158,3 +156,53 @@ def test_match_and_fulfill_missing_claim(monkeypatch):
     finally:
         if os.path.exists("test.db"):
             os.remove("test.db")
+
+def test_checkout_link_generation(monkeypatch):
+    # Pre-requisite: Create Product
+    import test_main
+    models.Base.metadata.drop_all(bind=test_main.engine)
+    models.Base.metadata.create_all(bind=test_main.engine)
+
+    db = TestingSessionLocal()
+    seller = models.Seller(paymongo_subscription_id="sub_test_checkout", subscription_status="active")
+    db.add(seller)
+    db.commit()
+    db.refresh(seller)
+
+    product = models.Product(
+        seller_id=seller.id,
+        name="Test API Product",
+        price=100.0,
+        filepath="assets/test_planner.pdf"
+    )
+    db.add(product)
+    db.commit()
+    db.refresh(product)
+    db.close()
+
+    class MockResponse:
+        status_code = 200
+        def json(self):
+            return {
+                "data": {
+                    "attributes": {
+                        "checkout_url": "https://pm.link/test_checkout"
+                    }
+                }
+            }
+
+    async def mock_post(*args, **kwargs):
+        return MockResponse()
+
+    monkeypatch.setattr("httpx.AsyncClient.post", mock_post)
+
+    response = client.post(
+        "/api/checkout",
+        json={"product_id": 1}
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"checkout_url": "https://pm.link/test_checkout"}
+
+    if os.path.exists("test.db"):
+        os.remove("test.db")

@@ -22,6 +22,8 @@ import re
 import hmac
 import hashlib
 import json
+import base64
+import httpx
 
 # Create the database tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -192,8 +194,44 @@ def receive_email_webhook(
     return notification
 
 
+
 # Add a simple PayMongo webhook endpoint with HMAC verification
-PAYMONGO_SECRET = os.environ.get("PAYMONGO_WEBHOOK_SECRET", "test_secret")
+PAYMONGO_WEBHOOK_SECRET = os.environ.get("PAYMONGO_WEBHOOK_SECRET", "test_secret")
+PAYMONGO_SECRET_KEY = os.environ.get("PAYMONGO_SECRET_KEY", "sk_test_xxx")
+
+@app.post("/api/checkout")
+async def create_checkout_link(checkout: schemas.CheckoutCreate, db: Session = Depends(get_db)):
+    product = db.query(models.Product).filter(models.Product.id == checkout.product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    url = "https://api.paymongo.com/v1/links"
+    payload = {
+        "data": {
+            "attributes": {
+                "amount": int(product.price * 100),
+                "description": product.name,
+                "remarks": f"Product ID: {product.id}"
+            }
+        }
+    }
+
+    auth_header = f"Basic {base64.b64encode(f'{PAYMONGO_SECRET_KEY}:'.encode()).decode()}"
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": auth_header
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, json=payload, headers=headers)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=400, detail="Failed to create checkout link")
+
+    data = response.json()
+    return {"checkout_url": data["data"]["attributes"]["checkout_url"]}
+
 
 @app.post("/api/webhooks/paymongo")
 async def paymongo_webhook(request: Request, db: Session = Depends(get_db)):
@@ -211,7 +249,7 @@ async def paymongo_webhook(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
     expected_sig = hmac.new(
-        PAYMONGO_SECRET.encode(),
+        PAYMONGO_WEBHOOK_SECRET.encode(),
         f"{t}.{payload.decode()}".encode(),
         hashlib.sha256
     ).hexdigest()
