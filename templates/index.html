@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claim Your Digital Product - Vallexis</title>
-    <link rel="stylesheet" href="~/static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
@@ -15,7 +15,7 @@
             <svg class="trust-icon" viewBox="0 0 20 20" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-1.998A11.954 11.954 0 0110 1.944zM6.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l5-5a1 1 0 00-1.414-1.414L9 10.586 6.707 9.293z" clip-rule="evenodd" />
             </svg>
-            Secure, instant delivery after payment verification
+            SSL Secured &bull; Automated Delivery
         </p>
     </header>
 
@@ -109,23 +109,43 @@
             </fieldset>
         </form>
 
-        <div id="success-state">
-            <svg class="success-icon" viewBox="0 0 20 20" aria-hidden="true">
+        <div id="success-state" role="status" aria-live="polite">
+            <svg class="success-icon fade-in" viewBox="0 0 20 20" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
-            <h3 style="margin-top:0; color:var(--color-text);">Claim Submitted Successfully</h3>
-            <p style="color:var(--color-text-muted); font-size:14px; margin-bottom: 24px;">
-                We are now verifying your payment. Once matched, we will watermark your PDF and send it to your email.
-            </p>
-            <div style="background-color: var(--color-bg); padding: 16px; border-radius: var(--radius); text-align:left; font-size: 14px;">
-                <strong>What happens next?</strong>
-                <ol style="margin-top:8px; margin-bottom:0; padding-left: 20px; color: var(--color-text-muted);">
-                    <li>Payment verified automatically</li>
-                    <li>Secure PDF generated</li>
-                    <li>Download link emailed to you</li>
-                </ol>
-            </div>
-            <button class="btn btn-primary" style="margin-top: 24px;" onclick="window.location.reload()">Submit Another Claim</button>
+            <h3 class="fade-in" style="animation-delay: 0.1s; margin-top:0; color:var(--color-text);">Claim Submitted Successfully</h3>
+
+            <ul class="timeline">
+                <li class="timeline-step fade-in" style="animation-delay: 0.2s;">
+                    <div class="timeline-icon">
+                        <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                    </div>
+                    <div class="timeline-content">
+                        <h4>Payment Verified</h4>
+                        <p>We are matching your claim with the payment.</p>
+                    </div>
+                </li>
+                <li class="timeline-step fade-in" style="animation-delay: 0.4s;">
+                    <div class="timeline-icon" style="background-color: var(--color-border); color: var(--color-text-muted);">
+                        <svg viewBox="0 0 20 20" style="fill: none; stroke: currentColor; stroke-width: 2;"><circle cx="10" cy="10" r="8"></circle><path d="M10 6v4l3 3"></path></svg>
+                    </div>
+                    <div class="timeline-content">
+                        <h4>Secure PDF Generated</h4>
+                        <p>Watermarking your file with your details.</p>
+                    </div>
+                </li>
+                <li class="timeline-step fade-in" style="animation-delay: 0.6s;">
+                    <div class="timeline-icon" style="background-color: var(--color-border); color: var(--color-text-muted);">
+                        <svg viewBox="0 0 20 20" style="fill: none; stroke: currentColor; stroke-width: 2;"><path d="M3 8l7 5 7-5M5 8v8a2 2 0 002 2h6a2 2 0 002-2V8"></path></svg>
+                    </div>
+                    <div class="timeline-content">
+                        <h4>Sent to Email</h4>
+                        <p>Delivering your secure download link.</p>
+                    </div>
+                </li>
+            </ul>
+
+            <button class="btn btn-primary fade-in" style="animation-delay: 0.8s; margin-top: var(--spacing-lg);" onclick="window.location.reload()">Submit Another Claim</button>
         </div>
     </section>
 
