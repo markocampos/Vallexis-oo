@@ -2,18 +2,32 @@
     --color-primary: #2563eb;
     --color-primary-dark: #1d4ed8;
     --color-success: #16a34a;
+    --color-success-bg: #dcfce7;
     --color-error: #dc2626;
+    --color-error-bg: #fee2e2;
     --color-warning: #ca8a04;
     --color-text: #1f2937;
     --color-text-muted: #6b7280;
-    --color-bg: #f9fafb;
+    --color-bg: #f3f4f6;
     --color-card: #ffffff;
     --color-border: #e5e7eb;
     --color-focus: #93c5fd;
-    --radius: 8px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-    --transition: 150ms ease;
+
+    /* Spacing & Sizes */
+    --radius: 12px;
+    --radius-sm: 8px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --touch-target: 48px;
+
+    /* Effects */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --transition: 200ms ease;
 }
 
 * {
@@ -100,8 +114,9 @@ body {
 .form-input, .form-select {
     width: 100%;
     padding: 12px;
+    min-height: var(--touch-target);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     font-size: 16px; /* 16px prevents iOS zoom */
     transition: border-color var(--transition), box-shadow var(--transition);
     background-color: #fff;
@@ -142,11 +157,12 @@ body {
     justify-content: center;
     align-items: center;
     width: 100%;
+    min-height: var(--touch-target);
     padding: 14px 20px;
     background-color: var(--color-primary);
     color: white;
     border: none;
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -354,4 +370,104 @@ body {
     width: 16px;
     height: 16px;
     fill: currentColor;
+}
+
+/* Mobile-first and bottom-sheet layout */
+@media (max-width: 600px) {
+    body {
+        align-items: flex-end;
+        padding: 0;
+        background-color: var(--color-bg);
+    }
+
+    .container {
+        margin-top: var(--spacing-xl);
+    }
+
+    .claim-card {
+        border-radius: var(--radius) var(--radius) 0 0;
+        padding: var(--spacing-lg) var(--spacing-md);
+        margin-bottom: 0;
+        min-height: calc(100vh - 100px);
+    }
+
+    .brand-header {
+        padding: 0 var(--spacing-md);
+        margin-top: var(--spacing-lg);
+    }
+}
+
+/* Success Timeline */
+.timeline {
+    margin: var(--spacing-lg) 0;
+    padding: 0;
+    list-style: none;
+    text-align: left;
+}
+
+.timeline-step {
+    position: relative;
+    padding-left: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+}
+
+.timeline-step:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-step::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 24px;
+    bottom: -24px;
+    width: 2px;
+    background-color: var(--color-success-bg);
+}
+
+.timeline-step:last-child::before {
+    display: none;
+}
+
+.timeline-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--color-success);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.timeline-icon svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+
+.timeline-content h4 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    color: var(--color-text);
+}
+
+.timeline-content p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
