@@ -11,3 +11,7 @@
 **Learning:** Raw user input should never be interpolated into HTML payloads without escaping. It allows attackers to run scripts or distort content structure in the client.
 **Prevention:** Always use `html.escape()` or dedicated templating engines (like Jinja2 with autoescaping) to sanitize user input prior to rendering HTML.
 ## 2026-06-04 - Hardcoded Credentials in Resend Setup\n**Vulnerability:** A hardcoded dummy API key fallback was used for Resend initialization.\n**Learning:** Relying on default fallback strings for API keys hides missing configuration errors and could be abused or cause runtime type errors when used blindly.\n**Prevention:** Rely strictly on environment variables for sensitive tokens and handle their absence explicitly using proper branching (e.g. `if api_key:`) to enable mock fallbacks in testing environments.
+## 2026-06-04 - Hardcoded PayMongo Webhook Secret
+**Vulnerability:** A fallback "test_secret" was used for `PAYMONGO_SECRET` in `main.py`, which would be used if the environment variable wasn't set.
+**Learning:** Using a hardcoded, default secret completely undermines HMAC verification for webhooks, allowing attackers to forge requests (e.g. maliciously activating or deactivating subscriptions) by signing them with the known default secret.
+**Prevention:** Fail securely if sensitive secrets are not configured. Never use default fallback strings for webhook secrets or API keys. Check for the presence of the secret and raise a 500 error if it is missing.

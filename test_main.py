@@ -136,6 +136,67 @@ def test_html_injection_in_email(monkeypatch):
         assert "<script>" not in captured_params["html"]
     finally:
         os.remove(dummy_pdf_path)
+def test_paymongo_webhook_missing_secret(monkeypatch):
+    import main
+    monkeypatch.setattr(main, "PAYMONGO_SECRET", None)
+
+    response = client.post(
+        "/api/webhooks/paymongo",
+        headers={"Paymongo-Signature": "t=123,te=456"},
+        json={"data": {"attributes": {"type": "test"}}}
+    )
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "Webhook secret not configured"
+
+
+def test_paymongo_webhook_invalid_signature(monkeypatch):
+    import main
+    monkeypatch.setattr(main, "PAYMONGO_SECRET", "test_secret")
+
+    # missing t
+    response = client.post(
+        "/api/webhooks/paymongo",
+        headers={"Paymongo-Signature": "te=456"},
+        json={"data": {"attributes": {"type": "test"}}}
+    )
+    assert response.status_code == 400
+
+    # signature mismatch
+    response = client.post(
+        "/api/webhooks/paymongo",
+        headers={"Paymongo-Signature": "t=123,te=invalid_signature"},
+        json={"data": {"attributes": {"type": "test"}}}
+    )
+    assert response.status_code == 401
+
+    # Using valid signature
+    import hmac
+    import hashlib
+    payload = b'{"data": {"attributes": {"type": "test"}}}'
+    expected_sig = hmac.new(
+        "test_secret".encode(),
+        f"123.{payload.decode()}".encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    # Valid te signature
+    response = client.post(
+        "/api/webhooks/paymongo",
+        headers={"Paymongo-Signature": f"t=123,te={expected_sig}"},
+        content=payload
+    )
+    assert response.status_code == 200
+
+    # Valid li signature
+    response = client.post(
+        "/api/webhooks/paymongo",
+        headers={"Paymongo-Signature": f"t=123,li={expected_sig}"},
+        content=payload
+    )
+    assert response.status_code == 200
+
+
 def test_match_and_fulfill_missing_claim(monkeypatch):
     # Setup test database and dependency overrides first
     engine = create_engine(
