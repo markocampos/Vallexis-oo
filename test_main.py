@@ -158,3 +158,66 @@ def test_match_and_fulfill_missing_claim(monkeypatch):
     finally:
         if os.path.exists("test.db"):
             os.remove("test.db")
+
+def test_health_check_ok():
+    models.Base.metadata.drop_all(bind=engine)
+    models.Base.metadata.create_all(bind=engine)
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "worker": "healthy", "database": "connected"}
+
+def test_health_check_unhealthy(monkeypatch):
+    import database
+
+    # Mock the database execute to raise an exception
+    def mock_execute(*args, **kwargs):
+        raise Exception("Database connection failed")
+
+    db = TestingSessionLocal()
+    monkeypatch.setattr(db, "execute", mock_execute)
+
+    # Need a way to inject our mocked db into the endpoint.
+    # For now, let's override the dependency.
+    def override_get_db_error():
+        yield db
+
+    app.dependency_overrides[get_db] = override_get_db_error
+    try:
+        response = client.get("/health")
+        assert response.status_code == 503
+        assert response.json()["status"] == "unhealthy"
+        assert "Database connection failed" in response.json()["error"]
+    finally:
+        app.dependency_overrides.clear()
+        db.close()
+
+
+def test_health_check_degraded():
+    import datetime
+    models.Base.metadata.drop_all(bind=engine)
+    models.Base.metadata.create_all(bind=engine)
+
+    db = TestingSessionLocal()
+
+    def override_get_db_degraded():
+        yield db
+
+    app.dependency_overrides[get_db] = override_get_db_degraded
+
+    try:
+        # Create a stale pending item
+        stale_item = models.DeliveryQueue(
+            claim_id=1,
+            pdf_path="test.pdf",
+            status="pending",
+            created_at=datetime.datetime.utcnow() - datetime.timedelta(minutes=11)
+        )
+        db.add(stale_item)
+        db.commit()
+
+        response = client.get("/health")
+        assert response.status_code == 200
+        assert response.json() == {"status": "degraded", "worker": "stalled"}
+    finally:
+        app.dependency_overrides.clear()
+        db.close()
