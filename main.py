@@ -6,6 +6,7 @@ from fastapi import (
     UploadFile,
     File,
     Request,
+    Response,
 )
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
@@ -22,6 +23,7 @@ import re
 import hmac
 import hashlib
 import json
+import datetime
 
 # Create the database tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -36,6 +38,30 @@ def get_db():
         yield db
     finally:
         db.close()
+
+from sqlalchemy import text
+
+@app.get("/health")
+def health_check(response: Response, db: Session = Depends(get_db)):
+    """Health check endpoint to verify DB and worker status."""
+    try:
+        # Check DB connection
+        db.execute(text("SELECT 1"))
+
+        # Check worker health: no pending items older than 10 minutes
+        ten_mins_ago = datetime.datetime.utcnow() - datetime.timedelta(minutes=10)
+        old_pending = db.query(models.DeliveryQueue).filter(
+            models.DeliveryQueue.status == "pending",
+            models.DeliveryQueue.created_at < ten_mins_ago
+        ).first()
+
+        if old_pending:
+            return {"status": "degraded", "worker": "stalled"}
+
+        return {"status": "ok", "worker": "healthy", "database": "connected"}
+    except Exception as e:
+        response.status_code = 503
+        return {"status": "unhealthy", "error": str(e)}
 
 
 def match_and_fulfill(reference_number: str):
