@@ -5,7 +5,7 @@ from typing import Optional
 class ClaimCreate(BaseModel):
     product_id: int
     buyer_name: str = Field(..., min_length=1, max_length=250)
-    buyer_email: str = Field(..., pattern=r"^[\w\.-]+@[\w\.-]+\.\w+$", max_length=254)
+    buyer_email: str = Field(..., pattern=r"^[\w\.\+\-]+@[\w\.-]+\.\w+$", max_length=254)
     reference_number: str = Field(..., pattern=r"^\d{13}$")
 
 
