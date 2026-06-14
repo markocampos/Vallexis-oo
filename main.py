@@ -193,10 +193,13 @@ def receive_email_webhook(
 
 
 # Add a simple PayMongo webhook endpoint with HMAC verification
-PAYMONGO_SECRET = os.environ.get("PAYMONGO_WEBHOOK_SECRET", "test_secret")
+PAYMONGO_SECRET = os.environ.get("PAYMONGO_WEBHOOK_SECRET")
 
 @app.post("/api/webhooks/paymongo")
 async def paymongo_webhook(request: Request, db: Session = Depends(get_db)):
+    if not PAYMONGO_SECRET:
+        raise HTTPException(status_code=500, detail="Webhook secret not configured")
+
     payload = await request.body()
     signature = request.headers.get("Paymongo-Signature", "")
 
