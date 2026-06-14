@@ -31,6 +31,10 @@ RUN pip install --no-cache /wheels/*
 # Copy source code
 COPY . .
 
+# Create a non-root user and change ownership
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
 # Expose port for FastAPI
 EXPOSE 8000
 
