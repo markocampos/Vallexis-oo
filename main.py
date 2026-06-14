@@ -193,30 +193,35 @@ def receive_email_webhook(
 
 
 # Add a simple PayMongo webhook endpoint with HMAC verification
-PAYMONGO_SECRET = os.environ.get("PAYMONGO_WEBHOOK_SECRET", "test_secret")
-
 @app.post("/api/webhooks/paymongo")
 async def paymongo_webhook(request: Request, db: Session = Depends(get_db)):
+    secret = os.environ.get("PAYMONGO_WEBHOOK_SECRET")
+    if not secret:
+        raise HTTPException(status_code=500, detail="Webhook secret not configured")
+
     payload = await request.body()
     signature = request.headers.get("Paymongo-Signature", "")
 
-    t, te = "", ""
+    t, te, li = "", "", ""
     for part in signature.split(","):
         if part.startswith("t="):
             t = part[2:]
         elif part.startswith("te="):
             te = part[3:]
+        elif part.startswith("li="):
+            li = part[3:]
 
-    if not t or not te:
+    if not t or (not te and not li):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
     expected_sig = hmac.new(
-        PAYMONGO_SECRET.encode(),
+        secret.encode(),
         f"{t}.{payload.decode()}".encode(),
         hashlib.sha256
     ).hexdigest()
 
-    if not hmac.compare_digest(expected_sig, te):
+    sig_to_check = te if te else li
+    if not hmac.compare_digest(expected_sig, sig_to_check):
         raise HTTPException(status_code=401, detail="Signature mismatch")
 
     data = json.loads(payload)

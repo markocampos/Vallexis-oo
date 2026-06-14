@@ -1,4 +1,4 @@
-## 2024-06-11 - PayMongo Webhooks
-**Experiment:** Add PayMongo webhooks for subscription gating.
-**Result:** Successfully added PayMongo webhooks with HMAC signature verification, checking subscription status to gate the products creation endpoint.
-**Action:** Always verify PayMongo webhook signatures to ensure security and prevent unauthorized access.
+## 2024-05-15 - PayMongo Webhooks Critical Fix
+**Experiment:** Add PayMongo webhook validation per the guidelines: fail on unconfigured secret, check both `te` (test) and `li` (live) signatures via HMAC SHA256.
+**Result:** Webhook signatures are correctly verified without failing on unconfigured secrets silently or restricting to only `te` signatures. It's now less than 50 lines.
+**Action:** Always verify HMAC signatures for webhooks, check for `li` in live mode, and fail 500 securely if the secret is unconfigured.
