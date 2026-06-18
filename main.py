@@ -114,8 +114,8 @@ async def serve_frontend(request: Request):
 
 
 @app.get("/api/products")
-def get_products(db: Session = Depends(get_db)):
-    return db.query(models.Product).all()
+def get_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return db.query(models.Product).offset(skip).limit(limit).all()
 
 
 @app.post("/api/products", response_model=schemas.ProductCreate)
