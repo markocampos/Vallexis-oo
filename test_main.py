@@ -158,3 +158,8 @@ def test_match_and_fulfill_missing_claim(monkeypatch):
     finally:
         if os.path.exists("test.db"):
             os.remove("test.db")
+
+def test_health_check_ok():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "db": "ok", "worker": "ok"}
